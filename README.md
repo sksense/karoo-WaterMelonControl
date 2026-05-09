@@ -18,7 +18,7 @@ A Hammerhead Karoo extension providing optimized media and volume controls, styl
 2. Install the APK onto your Karoo device:
    - **Karoo 3:** Share the APK file to your Karoo device through the **Karoo Companion App**.
    - **Sideloading:** Alternatively, use `adb install <filename>.apk`.
-3. Open the **WaterMelonControl** app from the Karoo app launcher.
+3. Open the **WaterMelonControl** app from the Karoo **Extension menu**.
 4. Click **"Open Notification Settings"** and enable access for WaterMelonControl.
 5. Add the widgets to your preferred data page in the Karoo settings.
 
