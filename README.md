@@ -2,6 +2,10 @@
 
 A Hammerhead Karoo extension providing optimized media and volume controls, styled to match the native KarooOS interface.
 
+This extension allows the user to add widgets to control the Karoo's device's media control so that you can control the sideloaded music app.
+
+The primary goal here is to allow the user to listen in beeper and music at the same time during riding without disturbing people around the user.
+
 ## Features
 
 - **PLAYING Widget:** Displays current track and artist name. Tap the widget to jump directly into the active media app.
