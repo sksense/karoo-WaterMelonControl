@@ -103,8 +103,7 @@ class WaterMelonControlListener : NotificationListenerService() {
             val mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
             val componentName = ComponentName(this, WaterMelonControlListener::class.java)
             mediaSessionManager.addOnActiveSessionsChangedListener(activeSessionsChangedListener, componentName)
-            val controllers = mediaSessionManager.getActiveSessions(componentName)
-            updateController(controllers)
+            updateController(mediaSessionManager.getActiveSessions(componentName))
         } catch (e: SecurityException) {
             Log.e("WaterMelonControl", "NotificationListener lacks permission to access MediaSessionManager")
         }
@@ -118,14 +117,19 @@ class WaterMelonControlListener : NotificationListenerService() {
     }
 
     private fun updateController(controllers: List<MediaController>?) {
-        mediaController?.unregisterCallback(callback)
-
-        // Priority: Any session that is actually PLAYING
-        mediaController = controllers?.find { it.playbackState?.state == PlaybackState.STATE_PLAYING }
+        val newController = controllers?.find { it.playbackState?.state == PlaybackState.STATE_PLAYING }
             ?: controllers?.firstOrNull()
 
-        mediaController?.registerCallback(callback)
+        if (newController?.packageName != mediaController?.packageName) {
+            mediaController?.unregisterCallback(callback)
+            mediaController = newController
+            mediaController?.registerCallback(callback)
+        }
 
+        refreshState()
+    }
+
+    private fun refreshState() {
         val metadata = mediaController?.metadata
         val playbackState = mediaController?.playbackState
         val isPlaying = playbackState?.state == PlaybackState.STATE_PLAYING
