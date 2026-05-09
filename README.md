@@ -33,4 +33,6 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## Credits
 
-Inspired by the architecture of [karoo-spintunes](https://github.com/timklge/karoo-spintunes).
+- **[karoo-ext](https://github.com/hammerheadnav/karoo-ext):** Uses the official Hammerhead Extension SDK (Apache 2.0).
+- **[karoo-spintunes](https://github.com/timklge/karoo-spintunes):** Architecture and UI inspired by the Spintunes project.
+- **Android Media APIs:** Leverages standard Android Notification and MediaSession protocols for universal app support.
