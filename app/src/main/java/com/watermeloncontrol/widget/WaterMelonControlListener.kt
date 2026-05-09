@@ -73,27 +73,19 @@ class WaterMelonControlListener : NotificationListenerService() {
 
     private val callback = object : MediaController.Callback() {
         override fun onPlaybackStateChanged(state: PlaybackState?) {
-            val isPlaying = state?.state == PlaybackState.STATE_PLAYING
-            if (!isPlaying) {
-                _mediaState.value = _mediaState.value.copy(
-                    trackTitle = "No Media",
-                    trackArtist = "",
-                    isPlaying = false
-                )
+            val s = state?.state ?: PlaybackState.STATE_NONE
+            if (s == PlaybackState.STATE_STOPPED || s == PlaybackState.STATE_PAUSED || s == PlaybackState.STATE_NONE) {
+                // Current session stopped/paused, check if another app is playing
+                val mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+                val componentName = ComponentName(this@WaterMelonControlListener, WaterMelonControlListener::class.java)
+                updateController(mediaSessionManager.getActiveSessions(componentName))
             } else {
-                _mediaState.value = _mediaState.value.copy(
-                    isPlaying = true
-                )
+                refreshState()
             }
         }
 
         override fun onMetadataChanged(metadata: MediaMetadata?) {
-            if (_mediaState.value.isPlaying) {
-                _mediaState.value = _mediaState.value.copy(
-                    trackTitle = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "Unknown Track",
-                    trackArtist = metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "Unknown Artist"
-                )
-            }
+            refreshState()
         }
     }
 
@@ -117,8 +109,8 @@ class WaterMelonControlListener : NotificationListenerService() {
     }
 
     private fun updateController(controllers: List<MediaController>?) {
-        val newController = controllers?.find { it.playbackState?.state == PlaybackState.STATE_PLAYING }
-            ?: controllers?.firstOrNull()
+        val playing = controllers?.find { it.playbackState?.state == PlaybackState.STATE_PLAYING }
+        val newController = playing ?: controllers?.firstOrNull()
 
         if (newController?.packageName != mediaController?.packageName) {
             mediaController?.unregisterCallback(callback)
@@ -130,18 +122,31 @@ class WaterMelonControlListener : NotificationListenerService() {
     }
 
     private fun refreshState() {
-        val metadata = mediaController?.metadata
-        val playbackState = mediaController?.playbackState
-        val isPlaying = playbackState?.state == PlaybackState.STATE_PLAYING
+        val controller = mediaController
+        if (controller == null) {
+            _mediaState.value = MediaState(trackTitle = "No Media", isPlaying = false)
+            return
+        }
+
+        val metadata = controller.metadata
+        val playbackState = controller.playbackState
+        val state = playbackState?.state ?: PlaybackState.STATE_NONE
+
+        // Show metadata if we are playing, buffering, or skipping
+        val shouldShowMetadata = state == PlaybackState.STATE_PLAYING ||
+                state == PlaybackState.STATE_BUFFERING ||
+                state == PlaybackState.STATE_SKIPPING_TO_NEXT ||
+                state == PlaybackState.STATE_SKIPPING_TO_PREVIOUS ||
+                state == PlaybackState.STATE_SKIPPING_TO_QUEUE_ITEM
 
         _mediaState.value = MediaState(
-            trackTitle = if (isPlaying) (metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
+            trackTitle = if (shouldShowMetadata) (metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
                 ?: "Unknown Track") else "No Media",
-            trackArtist = if (isPlaying) (metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
-                ?: "Unknown Artist") else "",
-            isPlaying = isPlaying,
-            packageName = mediaController?.packageName,
-            sessionActivity = mediaController?.sessionActivity
+            trackArtist = if (shouldShowMetadata) (metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
+                ?: "") else "",
+            isPlaying = state == PlaybackState.STATE_PLAYING,
+            packageName = controller.packageName,
+            sessionActivity = controller.sessionActivity
         )
     }
 }
