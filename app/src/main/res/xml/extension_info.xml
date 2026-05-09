@@ -1,8 +1,29 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ExtensionInfo
     displayName="@string/extension_name"
-    icon="@drawable/ic_launcher_foreground"
-    id="template-id"
-    scansDevices="false">
-    <!-- DataType ... -->
+    icon="@drawable/ic_music_note"
+    id="watermelon_control"
+    scansDevices="false"
+>
+    <DataType
+        description="@string/playing_now_desc"
+        displayName="@string/playing_now_name"
+        graphical="true"
+        icon="@drawable/ic_music_note"
+        typeId="watermelon_playing_now"
+    />
+    <DataType
+        description="@string/volume_desc"
+        displayName="@string/volume_name"
+        graphical="true"
+        icon="@drawable/ic_music_note"
+        typeId="watermelon_volume"
+    />
+    <DataType
+        description="@string/media_desc"
+        displayName="@string/media_name"
+        graphical="true"
+        icon="@drawable/ic_music_note"
+        typeId="watermelon_media"
+    />
 </ExtensionInfo>

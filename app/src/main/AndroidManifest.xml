@@ -1,17 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="WaterMelonControl"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat">
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
+        android:theme="@style/Theme.AppCompat.DayNight"
+    >
+
+        <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -19,16 +21,53 @@
         </activity>
 
         <service
-            android:name=".extension.TemplateExtension"
+            android:name=".WaterMelonControlService"
             android:exported="true"
-            tools:ignore="ExportedService">
+        >
             <intent-filter>
                 <action android:name="io.hammerhead.karooext.KAROO_EXTENSION" />
             </intent-filter>
             <meta-data
                 android:name="io.hammerhead.karooext.EXTENSION_INFO"
-                android:resource="@xml/extension_info" />
+                android:resource="@xml/extension_info"
+            />
         </service>
-    </application>
 
+        <service
+            android:name=".WaterMelonControlListener"
+            android:label="WaterMelonControl Listener"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true"
+        >
+            <intent-filter>
+                <action
+                    android:name="android.service.notification.NotificationListenerService"
+                />
+            </intent-filter>
+        </service>
+
+        <receiver android:name=".WidgetActionReceiver" android:exported="false">
+            <intent-filter>
+                <action
+                    android:name="com.watermeloncontrol.widget.ACTION_PLAY_PAUSE"
+                />
+                <action
+                    android:name="com.watermeloncontrol.widget.ACTION_NEXT"
+                />
+                <action
+                    android:name="com.watermeloncontrol.widget.ACTION_PREV"
+                />
+                <action
+                    android:name="com.watermeloncontrol.widget.ACTION_VOL_UP"
+                />
+                <action
+                    android:name="com.watermeloncontrol.widget.ACTION_VOL_DOWN"
+                />
+                <action
+                    android:name="com.watermeloncontrol.widget.ACTION_OPEN_APP"
+                />
+            </intent-filter>
+        </receiver>
+
+    </application>
 </manifest>

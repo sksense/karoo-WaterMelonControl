@@ -5,15 +5,15 @@ plugins {
 }
 
 android {
-    namespace = "io.hammerhead.karooexttemplate"
+    namespace = "com.watermeloncontrol.widget"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "io.hammerhead.karooexttemplate"
-        minSdk = 23
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        applicationId = "com.watermeloncontrol.widget"
+        minSdk = 26
+        targetSdk = 31
+        versionCode = 11
+        versionName = "1.1.9"
     }
 
     buildTypes {
@@ -40,4 +40,5 @@ dependencies {
     implementation(libs.bundles.androidx.lifeycle)
     implementation(libs.androidx.activity.compose)
     implementation(libs.bundles.compose.ui)
+    implementation(libs.androidx.glance.appwidget)
 }

@@ -1,19 +1,29 @@
-# Karoo Extensions (Template)
+# karoo-WaterMelonControl
 
-Template repository for empty app with Karoo Extension service.
+A Hammerhead Karoo extension providing optimized media and volume controls, styled to match the native KarooOS interface.
 
-## Instructions
+![Karoo WaterMelonControl](https://raw.githubusercontent.com/skpc/karoo-WaterMelonControl/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp)
 
-1. Clone this repository or "Use this template" on Github
-2. Update namespace in `build.gradle.kt` and `app/src/main/kotlin`
-3. Replace "template" values in `strings.xml`, `extension_info.xml`, `AndroidManifest.xml`
-4. Implement Android app experience (in `MainActivity.kt`)
-5. Implement extension functionality in `TemplateExtension.kt`
+## Features
 
-## Links
+- **PLAYING Widget:** Displays current track and artist name. Tap the widget to jump directly into the active media app.
+- **VOLUME Widget:** Precision volume control with native-styled, high-visibility icons.
+- **MEDIA Widget:** Fast access to Play/Pause, Next, and Previous track controls.
+- **Native Look & Feel:** Optimized for the Karoo display with rounded grey buttons and high-contrast vector icons.
+- **Push to Relocate:** All widgets include headers allowing them to be moved and resized on any data page.
 
-[Documentation](https://hammerheadnav.github.io/karoo-ext/index.html)
+## Installation
 
-[karoo-ext source](https://github.com/hammerheadnav/karoo-ext)
+1. Download the latest `app-debug.apk` from the [Releases](https://github.com/skpc/karoo-WaterMelonControl/releases) page.
+2. Sideload the APK onto your Karoo device (e.g., using `adb install app-debug.apk`).
+3. Open the **WaterMelonControl** app from the Karoo app launcher.
+4. Click **"Open Notification Settings"** and enable access for WaterMelonControl.
+5. Add the widgets to your preferred data page in the Karoo settings.
 
-[Sample](https://github.com/hammerheadnav/karoo-ext/tree/master/app)
+## License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## Credits
+
+Inspired by the architecture of [karoo-spintunes](https://github.com/timklge/karoo-spintunes).

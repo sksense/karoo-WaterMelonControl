@@ -1,5 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
 <resources>
-    <string name="app_name">template</string>
-    <string name="hello_karoo">Hello Karoo!</string>
-    <string name="extension_name">template</string>
+    <string name="app_name">WaterMelonControl</string>
+    <string name="extension_name">WaterMelonControl</string>
+    <string name="playing_now_desc">Displays the currently playing song</string>
+    <string name="playing_now_name">PLAYING</string>
+    <string name="volume_desc">Controls the device volume</string>
+    <string name="volume_name">VOLUME</string>
+    <string name="media_desc">Media playback controls</string>
+    <string name="media_name">MEDIA</string>
 </resources>
