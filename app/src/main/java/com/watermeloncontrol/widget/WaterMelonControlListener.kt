@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 data class MediaState(
-    val trackTitle: String = "No track",
+    val trackTitle: String = "No Media",
     val trackArtist: String = "",
     val isPlaying: Boolean = false,
     val packageName: String? = null,
@@ -73,16 +73,27 @@ class WaterMelonControlListener : NotificationListenerService() {
 
     private val callback = object : MediaController.Callback() {
         override fun onPlaybackStateChanged(state: PlaybackState?) {
-            _mediaState.value = _mediaState.value.copy(
-                isPlaying = state?.state == PlaybackState.STATE_PLAYING
-            )
+            val isPlaying = state?.state == PlaybackState.STATE_PLAYING
+            if (!isPlaying) {
+                _mediaState.value = _mediaState.value.copy(
+                    trackTitle = "No Media",
+                    trackArtist = "",
+                    isPlaying = false
+                )
+            } else {
+                _mediaState.value = _mediaState.value.copy(
+                    isPlaying = true
+                )
+            }
         }
 
         override fun onMetadataChanged(metadata: MediaMetadata?) {
-            _mediaState.value = _mediaState.value.copy(
-                trackTitle = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "Unknown Track",
-                trackArtist = metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "Unknown Artist"
-            )
+            if (_mediaState.value.isPlaying) {
+                _mediaState.value = _mediaState.value.copy(
+                    trackTitle = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "Unknown Track",
+                    trackArtist = metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "Unknown Artist"
+                )
+            }
         }
     }
 
@@ -109,24 +120,22 @@ class WaterMelonControlListener : NotificationListenerService() {
     private fun updateController(controllers: List<MediaController>?) {
         mediaController?.unregisterCallback(callback)
 
-        // Priority 1: Any session that is actually PLAYING
-        val playingController = controllers?.find { it.playbackState?.state == PlaybackState.STATE_PLAYING }
-
-        // Priority 2: A session from Melon (even if paused/idle)
-        val melonController = controllers?.find { it.packageName.contains("melon", ignoreCase = true) }
-
-        // Final Selection
-        mediaController = playingController ?: melonController ?: controllers?.firstOrNull()
+        // Priority: Any session that is actually PLAYING
+        mediaController = controllers?.find { it.playbackState?.state == PlaybackState.STATE_PLAYING }
+            ?: controllers?.firstOrNull()
 
         mediaController?.registerCallback(callback)
 
         val metadata = mediaController?.metadata
         val playbackState = mediaController?.playbackState
+        val isPlaying = playbackState?.state == PlaybackState.STATE_PLAYING
 
         _mediaState.value = MediaState(
-            trackTitle = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "Waiting...",
-            trackArtist = metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "",
-            isPlaying = playbackState?.state == PlaybackState.STATE_PLAYING,
+            trackTitle = if (isPlaying) (metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
+                ?: "Unknown Track") else "No Media",
+            trackArtist = if (isPlaying) (metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
+                ?: "Unknown Artist") else "",
+            isPlaying = isPlaying,
             packageName = mediaController?.packageName,
             sessionActivity = mediaController?.sessionActivity
         )
