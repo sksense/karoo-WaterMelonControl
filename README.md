@@ -14,11 +14,16 @@ A Hammerhead Karoo extension providing optimized media and volume controls, styl
 
 ## Installation
 
-1. Download the latest `app-debug.apk` from the [Releases](https://github.com/skpc/karoo-WaterMelonControl/releases) page.
-2. Sideload the APK onto your Karoo device (e.g., using `adb install app-debug.apk`).
+1. Download the **Latest APK** from the [Releases](https://github.com/sksense/karoo-WaterMelonControl/releases) page.
+2. Sideload the APK onto your Karoo device (e.g., using `adb install <filename>.apk`).
 3. Open the **WaterMelonControl** app from the Karoo app launcher.
 4. Click **"Open Notification Settings"** and enable access for WaterMelonControl.
 5. Add the widgets to your preferred data page in the Karoo settings.
+
+## Compatibility
+
+- **The New Karoo (Karoo 3):** Fully supported and tested.
+- **Karoo 2:** Currently **untested**. Compatibility is not guaranteed.
 
 ## License
 
