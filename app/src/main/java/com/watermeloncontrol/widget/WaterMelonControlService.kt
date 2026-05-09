@@ -14,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
-class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.6") {
+class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.8") {
 
     override val types: List<DataTypeImpl> = listOf(
         // 1. Playing Now Widget
@@ -90,6 +90,17 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.6") {
             override fun startView(context: Context, config: ViewConfig, emitter: ViewEmitter) {
                 emitter.onNext(UpdateGraphicConfig(showHeader = true))
                 val job = CoroutineScope(Dispatchers.Main).launch {
+                    val createMediaPi = { actionStr: String, reqCode: Int ->
+                        PendingIntent.getBroadcast(
+                            context, reqCode,
+                            Intent(context, WidgetActionReceiver::class.java).apply { action = actionStr },
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        )
+                    }
+                    val piPlayPause = createMediaPi("com.watermeloncontrol.widget.ACTION_PLAY_PAUSE", 0)
+                    val piPrev = createMediaPi("com.watermeloncontrol.widget.ACTION_PREV", 1)
+                    val piNext = createMediaPi("com.watermeloncontrol.widget.ACTION_NEXT", 2)
+
                     WaterMelonControlListener.mediaState
                         .distinctUntilChanged { old, new -> old.isPlaying == new.isPlaying }
                         .collect { state ->
@@ -98,26 +109,9 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.6") {
                                 if (state.isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
                             views.setImageViewResource(R.id.btn_play_pause, playPauseRes)
 
-                            val createMediaPi = { actionStr: String, reqCode: Int ->
-                                PendingIntent.getBroadcast(
-                                    context, reqCode,
-                                    Intent(context, WidgetActionReceiver::class.java).apply { action = actionStr },
-                                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                                )
-                            }
-
-                            views.setOnClickPendingIntent(
-                                R.id.btn_play_pause,
-                                createMediaPi("com.watermeloncontrol.widget.ACTION_PLAY_PAUSE", 0)
-                            )
-                            views.setOnClickPendingIntent(
-                                R.id.btn_prev,
-                                createMediaPi("com.watermeloncontrol.widget.ACTION_PREV", 1)
-                            )
-                            views.setOnClickPendingIntent(
-                                R.id.btn_next,
-                                createMediaPi("com.watermeloncontrol.widget.ACTION_NEXT", 2)
-                            )
+                            views.setOnClickPendingIntent(R.id.btn_play_pause, piPlayPause)
+                            views.setOnClickPendingIntent(R.id.btn_prev, piPrev)
+                            views.setOnClickPendingIntent(R.id.btn_next, piNext)
 
                             emitter.updateView(views)
                         }

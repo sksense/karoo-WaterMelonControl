@@ -12,8 +12,8 @@ android {
         applicationId = "com.watermeloncontrol.widget"
         minSdk = 26
         targetSdk = 31
-        versionCode = 19
-        versionName = "1.2.6"
+        versionCode = 21
+        versionName = "1.2.8"
     }
 
     buildTypes {
