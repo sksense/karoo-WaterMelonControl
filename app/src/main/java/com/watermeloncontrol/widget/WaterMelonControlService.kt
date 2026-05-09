@@ -11,9 +11,10 @@ import io.hammerhead.karooext.models.UpdateGraphicConfig
 import io.hammerhead.karooext.models.ViewConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
-class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.5") {
+class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.6") {
 
     override val types: List<DataTypeImpl> = listOf(
         // 1. Playing Now Widget
@@ -21,32 +22,38 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.5") {
             override fun startView(context: Context, config: ViewConfig, emitter: ViewEmitter) {
                 emitter.onNext(UpdateGraphicConfig(showHeader = true))
                 val job = CoroutineScope(Dispatchers.Main).launch {
-                    WaterMelonControlListener.mediaState.collect { state ->
-                        val views = RemoteViews(context.packageName, R.layout.widget_playing_now)
-                        views.setTextViewText(R.id.track_title, state.trackTitle)
-                        views.setTextViewText(R.id.track_artist, state.trackArtist)
+                    WaterMelonControlListener.mediaState
+                        .distinctUntilChanged { old, new ->
+                            old.trackTitle == new.trackTitle &&
+                                    old.trackArtist == new.trackArtist &&
+                                    old.packageName == new.packageName &&
+                                    old.sessionActivity == new.sessionActivity
+                        }
+                        .collect { state ->
+                            val views = RemoteViews(context.packageName, R.layout.widget_playing_now)
+                            views.setTextViewText(R.id.track_title, state.trackTitle)
+                            views.setTextViewText(R.id.track_artist, state.trackArtist)
 
-                        val pi = state.sessionActivity ?: state.packageName?.let { pkg ->
-                            val intent = Intent(context, WidgetActionReceiver::class.java).apply {
-                                action = "com.watermeloncontrol.widget.ACTION_OPEN_APP"
-                                putExtra("package_name", pkg)
+                            val pi = state.sessionActivity ?: state.packageName?.let { pkg ->
+                                val intent = Intent(context, WidgetActionReceiver::class.java).apply {
+                                    action = "com.watermeloncontrol.widget.ACTION_OPEN_APP"
+                                    putExtra("package_name", pkg)
+                                }
+                                PendingIntent.getBroadcast(
+                                    context,
+                                    10,
+                                    intent,
+                                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                                )
                             }
-                            PendingIntent.getBroadcast(
-                                context,
-                                10,
-                                intent,
-                                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                            )
-                        }
 
-                        if (pi != null) {
-                            views.setOnClickPendingIntent(R.id.playing_root, pi)
-                            views.setOnClickPendingIntent(R.id.track_title, pi)
-                            views.setOnClickPendingIntent(R.id.track_artist, pi)
+                            if (pi != null) {
+                                views.setOnClickPendingIntent(R.id.playing_root, pi)
+                                views.setOnClickPendingIntent(R.id.track_title, pi)
+                                views.setOnClickPendingIntent(R.id.track_artist, pi)
+                            }
+                            emitter.updateView(views)
                         }
-
-                        emitter.updateView(views)
-                    }
                 }
                 emitter.setCancellable { job.cancel() }
             }
@@ -58,23 +65,22 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.5") {
                 emitter.onNext(UpdateGraphicConfig(showHeader = true))
                 val views = RemoteViews(context.packageName, R.layout.widget_volume)
 
-                val volUpPi = PendingIntent.getBroadcast(
-                    context, 3,
-                    Intent(context, WidgetActionReceiver::class.java).apply {
-                        action = "com.watermeloncontrol.widget.ACTION_VOL_UP"
-                    },
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                val volDownPi = PendingIntent.getBroadcast(
-                    context, 4,
-                    Intent(context, WidgetActionReceiver::class.java).apply {
-                        action = "com.watermeloncontrol.widget.ACTION_VOL_DOWN"
-                    },
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
+                val createVolPi = { actionStr: String, reqCode: Int ->
+                    PendingIntent.getBroadcast(
+                        context, reqCode,
+                        Intent(context, WidgetActionReceiver::class.java).apply { action = actionStr },
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                }
 
-                views.setOnClickPendingIntent(R.id.btn_vol_up, volUpPi)
-                views.setOnClickPendingIntent(R.id.btn_vol_down, volDownPi)
+                views.setOnClickPendingIntent(
+                    R.id.btn_vol_up,
+                    createVolPi("com.watermeloncontrol.widget.ACTION_VOL_UP", 3)
+                )
+                views.setOnClickPendingIntent(
+                    R.id.btn_vol_down,
+                    createVolPi("com.watermeloncontrol.widget.ACTION_VOL_DOWN", 4)
+                )
                 emitter.updateView(views)
             }
         },
@@ -84,44 +90,37 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.5") {
             override fun startView(context: Context, config: ViewConfig, emitter: ViewEmitter) {
                 emitter.onNext(UpdateGraphicConfig(showHeader = true))
                 val job = CoroutineScope(Dispatchers.Main).launch {
-                    WaterMelonControlListener.mediaState.collect { state ->
-                        val views = RemoteViews(context.packageName, R.layout.widget_media)
+                    WaterMelonControlListener.mediaState
+                        .distinctUntilChanged { old, new -> old.isPlaying == new.isPlaying }
+                        .collect { state ->
+                            val views = RemoteViews(context.packageName, R.layout.widget_media)
+                            val playPauseRes =
+                                if (state.isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+                            views.setImageViewResource(R.id.btn_play_pause, playPauseRes)
 
-                        val playPauseRes = if (state.isPlaying) {
-                            android.R.drawable.ic_media_pause
-                        } else {
-                            android.R.drawable.ic_media_play
+                            val createMediaPi = { actionStr: String, reqCode: Int ->
+                                PendingIntent.getBroadcast(
+                                    context, reqCode,
+                                    Intent(context, WidgetActionReceiver::class.java).apply { action = actionStr },
+                                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                                )
+                            }
+
+                            views.setOnClickPendingIntent(
+                                R.id.btn_play_pause,
+                                createMediaPi("com.watermeloncontrol.widget.ACTION_PLAY_PAUSE", 0)
+                            )
+                            views.setOnClickPendingIntent(
+                                R.id.btn_prev,
+                                createMediaPi("com.watermeloncontrol.widget.ACTION_PREV", 1)
+                            )
+                            views.setOnClickPendingIntent(
+                                R.id.btn_next,
+                                createMediaPi("com.watermeloncontrol.widget.ACTION_NEXT", 2)
+                            )
+
+                            emitter.updateView(views)
                         }
-                        views.setImageViewResource(R.id.btn_play_pause, playPauseRes)
-
-                        val playPausePi = PendingIntent.getBroadcast(
-                            context, 0,
-                            Intent(context, WidgetActionReceiver::class.java).apply {
-                                action = "com.watermeloncontrol.widget.ACTION_PLAY_PAUSE"
-                            },
-                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                        )
-                        val prevPi = PendingIntent.getBroadcast(
-                            context, 1,
-                            Intent(context, WidgetActionReceiver::class.java).apply {
-                                action = "com.watermeloncontrol.widget.ACTION_PREV"
-                            },
-                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                        )
-                        val nextPi = PendingIntent.getBroadcast(
-                            context, 2,
-                            Intent(context, WidgetActionReceiver::class.java).apply {
-                                action = "com.watermeloncontrol.widget.ACTION_NEXT"
-                            },
-                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                        )
-
-                        views.setOnClickPendingIntent(R.id.btn_play_pause, playPausePi)
-                        views.setOnClickPendingIntent(R.id.btn_prev, prevPi)
-                        views.setOnClickPendingIntent(R.id.btn_next, nextPi)
-
-                        emitter.updateView(views)
-                    }
                 }
                 emitter.setCancellable { job.cancel() }
             }

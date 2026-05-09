@@ -12,6 +12,7 @@ import android.service.notification.NotificationListenerService
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 data class MediaState(
     val trackTitle: String = "No Media",
@@ -109,22 +110,21 @@ class WaterMelonControlListener : NotificationListenerService() {
     }
 
     private fun updateController(controllers: List<MediaController>?) {
-        val playing = controllers?.find { it.playbackState?.state == PlaybackState.STATE_PLAYING }
-        val newController = playing ?: controllers?.firstOrNull()
+        val newController = controllers?.find { it.playbackState?.state == PlaybackState.STATE_PLAYING }
+            ?: controllers?.firstOrNull()
 
         if (newController?.packageName != mediaController?.packageName) {
             mediaController?.unregisterCallback(callback)
             mediaController = newController
             mediaController?.registerCallback(callback)
         }
-
         refreshState()
     }
 
     private fun refreshState() {
         val controller = mediaController
         if (controller == null) {
-            _mediaState.value = MediaState(trackTitle = "No Media", isPlaying = false)
+            _mediaState.update { MediaState(trackTitle = "No Media", isPlaying = false) }
             return
         }
 
@@ -132,21 +132,21 @@ class WaterMelonControlListener : NotificationListenerService() {
         val playbackState = controller.playbackState
         val state = playbackState?.state ?: PlaybackState.STATE_NONE
 
-        // Show metadata if we are playing, buffering, or skipping
         val shouldShowMetadata = state == PlaybackState.STATE_PLAYING ||
                 state == PlaybackState.STATE_BUFFERING ||
                 state == PlaybackState.STATE_SKIPPING_TO_NEXT ||
-                state == PlaybackState.STATE_SKIPPING_TO_PREVIOUS ||
-                state == PlaybackState.STATE_SKIPPING_TO_QUEUE_ITEM
+                state == PlaybackState.STATE_SKIPPING_TO_PREVIOUS
 
-        _mediaState.value = MediaState(
-            trackTitle = if (shouldShowMetadata) (metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
-                ?: "Unknown Track") else "No Media",
-            trackArtist = if (shouldShowMetadata) (metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
-                ?: "") else "",
-            isPlaying = state == PlaybackState.STATE_PLAYING,
-            packageName = controller.packageName,
-            sessionActivity = controller.sessionActivity
-        )
+        _mediaState.update {
+            MediaState(
+                trackTitle = if (shouldShowMetadata) (metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
+                    ?: "Unknown Track") else "No Media",
+                trackArtist = if (shouldShowMetadata) (metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
+                    ?: "") else "",
+                isPlaying = state == PlaybackState.STATE_PLAYING,
+                packageName = controller.packageName,
+                sessionActivity = controller.sessionActivity
+            )
+        }
     }
 }
