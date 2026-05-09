@@ -109,8 +109,14 @@ class WaterMelonControlListener : NotificationListenerService() {
     private fun updateController(controllers: List<MediaController>?) {
         mediaController?.unregisterCallback(callback)
 
-        val targetController = controllers?.find { it.packageName.contains("melon", ignoreCase = true) }
-        mediaController = targetController ?: controllers?.firstOrNull()
+        // Priority 1: Any session that is actually PLAYING
+        val playingController = controllers?.find { it.playbackState?.state == PlaybackState.STATE_PLAYING }
+
+        // Priority 2: A session from Melon (even if paused/idle)
+        val melonController = controllers?.find { it.packageName.contains("melon", ignoreCase = true) }
+
+        // Final Selection
+        mediaController = playingController ?: melonController ?: controllers?.firstOrNull()
 
         mediaController?.registerCallback(callback)
 

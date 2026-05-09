@@ -13,7 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class WaterMelonControlService : KarooExtension("watermelon_control", "1.1.10") {
+class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.0") {
 
     override val types: List<DataTypeImpl> = listOf(
         // 1. Playing Now Widget
