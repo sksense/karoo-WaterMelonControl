@@ -6,7 +6,7 @@ This extension allows the user to add widgets to control the Karoo's device's me
 
 The primary goal here is to allow the user to listen in beeper and music at the same time during riding without disturbing people around the user.
 
-![Karoo WaterMelonControl](https://raw.githubusercontent.com/skpc/karoo-WaterMelonControl/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp)
+![Karoo WaterMelonControl](https://raw.githubusercontent.com/sksense/karoo-WaterMelonControl/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp)
 
 ## Features
 
