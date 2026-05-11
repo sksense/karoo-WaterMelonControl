@@ -33,6 +33,7 @@ class WaterMelonControlListener : NotificationListenerService() {
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var refreshJob: Job? = null
+    private var actionRefreshJob: Job? = null
 
     companion object {
         private val _mediaState = MutableStateFlow(MediaState())
@@ -40,23 +41,29 @@ class WaterMelonControlListener : NotificationListenerService() {
 
         private var mediaController: MediaController? = null
 
-        fun playPause() {
-            val controller = mediaController ?: return
+        fun playPause(): Boolean {
+            val controller = mediaController ?: return false
             if (_mediaState.value.isPlaying) {
                 controller.transportControls.pause()
             } else {
                 controller.transportControls.play()
             }
+            refreshAfterAction()
+            return true
         }
 
-        fun next() {
-            mediaController?.transportControls?.skipToNext()
-            debouncedRefreshStateStatic()
+        fun next(): Boolean {
+            val controller = mediaController ?: return false
+            controller.transportControls.skipToNext()
+            refreshAfterAction()
+            return true
         }
 
-        fun prev() {
-            mediaController?.transportControls?.skipToPrevious()
-            debouncedRefreshStateStatic()
+        fun prev(): Boolean {
+            val controller = mediaController ?: return false
+            controller.transportControls.skipToPrevious()
+            refreshAfterAction()
+            return true
         }
 
         fun volumeUp() {
@@ -67,9 +74,8 @@ class WaterMelonControlListener : NotificationListenerService() {
             mediaController?.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
         }
 
-        // Static reference for companion object to trigger debounce
-        var debouncedRefreshStateStatic: () -> Unit = {}
-
+        // Static reference for companion object to refresh from widget button actions.
+        var refreshAfterAction: () -> Unit = {}
 
         fun sendMediaButton(context: Context, keyCode: Int) {
             val intent = android.content.Intent(android.content.Intent.ACTION_MEDIA_BUTTON)
@@ -97,18 +103,18 @@ class WaterMelonControlListener : NotificationListenerService() {
                 val componentName = ComponentName(this@WaterMelonControlListener, WaterMelonControlListener::class.java)
                 updateController(mediaSessionManager.getActiveSessions(componentName))
             } else {
-                debouncedRefreshState()
+                refreshStateSoon()
             }
         }
 
         override fun onMetadataChanged(metadata: MediaMetadata?) {
-            debouncedRefreshState()
+            refreshStateNow()
         }
     }
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        debouncedRefreshStateStatic = { debouncedRefreshState() }
+        refreshAfterAction = { refreshAfterControlAction() }
         try {
             val mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
             val componentName = ComponentName(this, WaterMelonControlListener::class.java)
@@ -121,16 +127,22 @@ class WaterMelonControlListener : NotificationListenerService() {
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
-        debouncedRefreshStateStatic = {}
+        refreshAfterAction = {}
+        refreshJob?.cancel()
+        actionRefreshJob?.cancel()
         val mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
         mediaSessionManager.removeOnActiveSessionsChangedListener(activeSessionsChangedListener)
         mediaController?.unregisterCallback(callback)
+        mediaController = null
+        _mediaState.update { MediaState(trackTitle = "No Media", isPlaying = false) }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        serviceScope.cancel()
+        refreshAfterAction = {}
         mediaController?.unregisterCallback(callback)
+        mediaController = null
+        serviceScope.cancel()
     }
 
     private fun updateController(controllers: List<MediaController>?) {
@@ -142,13 +154,29 @@ class WaterMelonControlListener : NotificationListenerService() {
             mediaController = newController
             mediaController?.registerCallback(callback)
         }
-        debouncedRefreshState()
+        refreshStateNow()
     }
 
-    private fun debouncedRefreshState() {
+    private fun refreshStateSoon() {
         refreshJob?.cancel()
         refreshJob = serviceScope.launch {
-            delay(200)
+            delay(100)
+            refreshState()
+        }
+    }
+
+    private fun refreshStateNow() {
+        refreshJob?.cancel()
+        refreshState()
+    }
+
+    private fun refreshAfterControlAction() {
+        refreshStateNow()
+        actionRefreshJob?.cancel()
+        actionRefreshJob = serviceScope.launch {
+            delay(150)
+            refreshState()
+            delay(450)
             refreshState()
         }
     }

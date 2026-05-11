@@ -3,25 +3,27 @@ package com.watermeloncontrol.widget
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.media.AudioManager
 import android.view.KeyEvent
 
 class WidgetActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             "com.watermeloncontrol.widget.ACTION_PLAY_PAUSE" -> {
-                WaterMelonControlListener.playPause()
-                WaterMelonControlListener.sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
+                if (!WaterMelonControlListener.playPause()) {
+                    WaterMelonControlListener.sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
+                }
             }
 
             "com.watermeloncontrol.widget.ACTION_NEXT" -> {
-                WaterMelonControlListener.next()
-                WaterMelonControlListener.sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_NEXT)
+                if (!WaterMelonControlListener.next()) {
+                    WaterMelonControlListener.sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_NEXT)
+                }
             }
 
             "com.watermeloncontrol.widget.ACTION_PREV" -> {
-                WaterMelonControlListener.prev()
-                WaterMelonControlListener.sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_PREVIOUS)
+                if (!WaterMelonControlListener.prev()) {
+                    WaterMelonControlListener.sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_PREVIOUS)
+                }
             }
 
             "com.watermeloncontrol.widget.ACTION_VOL_UP" -> {
