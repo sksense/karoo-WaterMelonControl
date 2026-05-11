@@ -12,6 +12,10 @@ val releaseSigningProperties = Properties().apply {
         releaseSigningPropertiesFile.inputStream().use(::load)
     }
 }
+val defaultReleaseBaseUrl =
+    "https://github.com/sksense/karoo-WaterMelonControl/releases/latest/download"
+val karooManifestUrl =
+    providers.gradleProperty("karooManifestUrl").orElse("$defaultReleaseBaseUrl/manifest.json")
 
 android {
     namespace = "com.watermeloncontrol.widget"
@@ -21,8 +25,9 @@ android {
         applicationId = "com.watermeloncontrol.widget"
         minSdk = 26
         targetSdk = 34
-        versionCode = 26
-        versionName = "1.3.1-beta01"
+        versionCode = 27
+        versionName = "1.3.1-beta02"
+        manifestPlaceholders["karooManifestUrl"] = karooManifestUrl.get()
     }
 
     signingConfigs {
@@ -54,6 +59,31 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+}
+
+tasks.register("generateManifest") {
+    description = "Generates manifest.json with current Karoo release metadata"
+    group = "build"
+
+    doLast {
+        val baseUrl = System.getenv("BASE_URL") ?: defaultReleaseBaseUrl
+        val manifestFile = file("$projectDir/manifest.json")
+        val manifest = mapOf(
+            "label" to "WaterMelonControl",
+            "packageName" to "com.watermeloncontrol.widget",
+            "iconUrl" to "$baseUrl/WaterMelonControl-icon.webp",
+            "latestApkUrl" to "$baseUrl/WaterMelonControl.apk",
+            "latestVersion" to android.defaultConfig.versionName,
+            "latestVersionCode" to android.defaultConfig.versionCode,
+            "developer" to "sksense",
+            "description" to "WaterMelonControl adds Karoo data page widgets for sideloaded media apps, including now playing, playback controls, tap-to-open, and device music volume control.",
+            "releaseNotes" to (System.getenv("RELEASE_NOTES") ?: ""),
+            "tags" to listOf("entertainment")
+        )
+
+        manifestFile.writeText(groovy.json.JsonBuilder(manifest).toPrettyString())
+        println("Generated manifest.json with version ${android.defaultConfig.versionName} (${android.defaultConfig.versionCode})")
     }
 }
 
