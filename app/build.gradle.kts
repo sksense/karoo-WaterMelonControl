@@ -4,6 +4,15 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+import java.util.Properties
+
+val releaseSigningPropertiesFile = rootProject.file("keystore/watermeloncontrol-release.properties")
+val releaseSigningProperties = Properties().apply {
+    if (releaseSigningPropertiesFile.exists()) {
+        releaseSigningPropertiesFile.inputStream().use(::load)
+    }
+}
+
 android {
     namespace = "com.watermeloncontrol.widget"
     compileSdk = 34
@@ -16,9 +25,23 @@ android {
         versionName = "1.3.0"
     }
 
+    signingConfigs {
+        if (releaseSigningPropertiesFile.exists()) {
+            create("release") {
+                storeFile = rootProject.file(releaseSigningProperties["storeFile"] as String)
+                storePassword = releaseSigningProperties["storePassword"] as String
+                keyAlias = releaseSigningProperties["keyAlias"] as String
+                keyPassword = releaseSigningProperties["keyPassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (releaseSigningPropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
