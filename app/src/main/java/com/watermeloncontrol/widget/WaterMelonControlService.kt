@@ -14,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
-class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.9") {
+class WaterMelonControlService : KarooExtension("watermelon_control", "1.3.0") {
 
     override val types: List<DataTypeImpl> = listOf(
         // 1. Playing Now Widget
@@ -34,7 +34,7 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.9") {
                             views.setTextViewText(R.id.track_title, state.trackTitle)
                             views.setTextViewText(R.id.track_artist, state.trackArtist)
 
-                            val pi = state.sessionActivity ?: state.packageName?.let { pkg ->
+                            val pi = state.packageName?.let { pkg ->
                                 val intent = Intent(context, WidgetActionReceiver::class.java).apply {
                                     action = WidgetActionReceiver.ACTION_OPEN_APP
                                     putExtra(WidgetActionReceiver.EXTRA_PACKAGE_NAME, pkg)

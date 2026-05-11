@@ -3,6 +3,7 @@ package com.watermeloncontrol.widget
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 
 class WidgetActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -19,11 +20,36 @@ class WidgetActionReceiver : BroadcastReceiver() {
 
             ACTION_OPEN_APP -> {
                 val pkg = intent.getStringExtra(EXTRA_PACKAGE_NAME) ?: return
-                val launchIntent = context.packageManager.getLaunchIntentForPackage(pkg)?.apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val launchIntent = context.packageManager.getLaunchIntentForPackage(pkg)
+                    ?: Intent(Intent.ACTION_MAIN).apply {
+                        addCategory(Intent.CATEGORY_LAUNCHER)
+                        setPackage(pkg)
+                    }.let { launcherIntent ->
+                        context.packageManager.queryIntentActivities(launcherIntent, 0)
+                            .firstOrNull()
+                            ?.activityInfo
+                            ?.let { activityInfo ->
+                                Intent(Intent.ACTION_MAIN).apply {
+                                    addCategory(Intent.CATEGORY_LAUNCHER)
+                                    setClassName(activityInfo.packageName, activityInfo.name)
+                                }
+                            }
+                    }
+
+                if (launchIntent == null) {
+                    Log.w("WaterMelonControl", "No launcher activity found for $pkg")
+                    return
                 }
-                if (launchIntent != null) {
-                    context.startActivity(launchIntent)
+
+                try {
+                    context.startActivity(
+                        launchIntent.addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK or
+                                    Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                        )
+                    )
+                } catch (e: RuntimeException) {
+                    Log.w("WaterMelonControl", "Unable to open media app $pkg", e)
                 }
             }
         }
