@@ -100,15 +100,9 @@ class WaterMelonControlListener : NotificationListenerService() {
         }
 
         private fun sendMediaButton(context: Context, keyCode: Int) {
-            sendMediaButtonEvent(context, KeyEvent.ACTION_DOWN, keyCode)
-            sendMediaButtonEvent(context, KeyEvent.ACTION_UP, keyCode)
-        }
-
-        private fun sendMediaButtonEvent(context: Context, action: Int, keyCode: Int) {
-            val intent = android.content.Intent(android.content.Intent.ACTION_MEDIA_BUTTON).apply {
-                putExtra(android.content.Intent.EXTRA_KEY_EVENT, KeyEvent(action, keyCode))
-            }
-            context.sendOrderedBroadcast(intent, null)
+            val audioManager = context.applicationContext.getSystemService(AudioManager::class.java)
+            audioManager.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, keyCode))
+            audioManager.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_UP, keyCode))
         }
     }
 
@@ -155,6 +149,10 @@ class WaterMelonControlListener : NotificationListenerService() {
         mediaController?.unregisterCallback(callback)
         mediaController = null
         _mediaState.update { MediaState() }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            requestRebind(ComponentName(this, WaterMelonControlListener::class.java))
+        }
     }
 
     override fun onDestroy() {

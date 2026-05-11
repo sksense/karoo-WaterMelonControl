@@ -1,7 +1,9 @@
 package com.watermeloncontrol.widget
 
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
@@ -27,11 +29,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen(
-                        onOpenSettings = {
-                            startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-                        }
-                    )
+                    MainScreen()
                 }
             }
         }
@@ -39,9 +37,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(onOpenSettings: () -> Unit) {
+fun MainScreen() {
     val context = LocalContext.current
     var isPermissionGranted by remember { mutableStateOf(false) }
+    var showAdbDialog by remember { mutableStateOf(false) }
+    var showRepairSuccessDialog by remember { mutableStateOf(false) }
 
     fun checkPermission() {
         val listeners = Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners")
@@ -67,6 +67,34 @@ fun MainScreen(onOpenSettings: () -> Unit) {
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
+    }
+
+    if (showAdbDialog) {
+        AlertDialog(
+            onDismissRequest = { showAdbDialog = false },
+            title = { Text("Settings Not Found") },
+            text = {
+                Text("Your device does not support the standard notification settings UI. Please connect your device to a computer and run the following ADB command to enable access:\n\nadb shell settings put secure enabled_notification_listeners %nlisteners:com.watermeloncontrol.widget/com.watermeloncontrol.widget.WaterMelonControlListener")
+            },
+            confirmButton = {
+                TextButton(onClick = { showAdbDialog = false }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    if (showRepairSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showRepairSuccessDialog = false },
+            title = { Text("Service Restarted") },
+            text = { Text("The background service has been successfully restarted. Media controls should now respond.") },
+            confirmButton = {
+                TextButton(onClick = { showRepairSuccessDialog = false }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 
     Column(
@@ -106,8 +134,37 @@ fun MainScreen(onOpenSettings: () -> Unit) {
             style = MaterialTheme.typography.bodyLarge
         )
         Spacer(modifier = Modifier.height(24.dp))
-        Button(onClick = onOpenSettings) {
+        Button(onClick = {
+            try {
+                context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+            } catch (e: ActivityNotFoundException) {
+                showAdbDialog = true
+            }
+        }) {
             Text(if (isPermissionGranted) "Open Settings anyway" else "Open Notification Settings")
+        }
+
+        if (isPermissionGranted) {
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedButton(onClick = {
+                val pm = context.packageManager
+                val componentName = ComponentName(context, WaterMelonControlListener::class.java)
+                // Disable component
+                pm.setComponentEnabledSetting(
+                    componentName,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP
+                )
+                // Re-enable component
+                pm.setComponentEnabledSetting(
+                    componentName,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP
+                )
+                showRepairSuccessDialog = true
+            }) {
+                Text("Repair Background Service")
+            }
         }
     }
 }
