@@ -1,0 +1,62 @@
+name: Release APK
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :app:assembleRelease
+
+      - name: Prepare release asset
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          mkdir -p release
+          echo "${KEYSTORE_BASE64}" | base64 --decode > release/signing.keystore
+          BUILD_TOOLS_DIR="$(find "${ANDROID_HOME}/build-tools" -maxdepth 1 -mindepth 1 -type d | sort -V | tail -n 1)"
+          "${BUILD_TOOLS_DIR}/zipalign" -p -f 4 \
+            app/build/outputs/apk/release/app-release-unsigned.apk \
+            release/WaterMelonControl-aligned.apk
+          "${BUILD_TOOLS_DIR}/apksigner" sign \
+            --ks release/signing.keystore \
+            --ks-key-alias "${KEY_ALIAS}" \
+            --ks-pass "pass:${KEYSTORE_PASSWORD}" \
+            --key-pass "pass:${KEY_PASSWORD}" \
+            --out release/WaterMelonControl.apk \
+            release/WaterMelonControl-aligned.apk
+          "${BUILD_TOOLS_DIR}/apksigner" verify release/WaterMelonControl.apk
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" release/WaterMelonControl.apk \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes

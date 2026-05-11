@@ -11,9 +11,9 @@ android {
     defaultConfig {
         applicationId = "com.watermeloncontrol.widget"
         minSdk = 26
-        targetSdk = 31
-        versionCode = 21
-        versionName = "1.2.8"
+        targetSdk = 34
+        versionCode = 22
+        versionName = "1.2.9"
     }
 
     buildTypes {
@@ -37,8 +37,8 @@ android {
 dependencies {
     implementation(libs.hammerhead.karoo.ext)
     implementation(libs.androidx.core.ktx)
-    implementation(libs.bundles.androidx.lifeycle)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.bundles.compose.ui)
-    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.material)
 }

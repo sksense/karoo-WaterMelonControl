@@ -1,5 +1,6 @@
 package com.watermeloncontrol.widget
 
+import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
@@ -12,10 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,10 +45,18 @@ fun MainScreen(onOpenSettings: () -> Unit) {
 
     fun checkPermission() {
         val listeners = Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners")
-        isPermissionGranted = listeners?.contains(context.packageName) == true
+        val listenerComponent = ComponentName(context, WaterMelonControlListener::class.java)
+        isPermissionGranted = listeners
+            ?.split(':')
+            ?.mapNotNull(ComponentName::unflattenFromString)
+            ?.any { it == listenerComponent } == true
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(Unit) {
+        checkPermission()
+    }
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {

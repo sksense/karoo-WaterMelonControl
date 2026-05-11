@@ -16,7 +16,7 @@ The primary goal here is to allow the user to listen in beeper and music at the 
 
 ## Installation
 
-1. Download the **[Latest WaterMelonControl APK (v1.2.8)](https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.2.8/WaterMelonControl.1.2.8.apk)**.
+1. Download the **[Latest WaterMelonControl APK (latest version)](https://github.com/sksense/karoo-WaterMelonControl/releases/latest/download/WaterMelonControl.apk)**.
 2. Install the APK onto your Karoo device:
    - **Karoo 3:** Share the APK file to your Karoo device through the **Karoo Companion App**.
    - **Sideloading:** Alternatively, use `adb install <filename>.apk`.

@@ -10,6 +10,7 @@ import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.service.notification.NotificationListenerService
 import android.util.Log
+import android.view.KeyEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -40,47 +41,74 @@ class WaterMelonControlListener : NotificationListenerService() {
 
         private var mediaController: MediaController? = null
 
-        fun playPause() {
-            val controller = mediaController ?: return
+        fun playPause(context: Context) {
+            val controller = mediaController
+            if (controller == null) {
+                sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
+                return
+            }
+
             if (_mediaState.value.isPlaying) {
                 controller.transportControls.pause()
             } else {
                 controller.transportControls.play()
             }
-        }
-
-        fun next() {
-            mediaController?.transportControls?.skipToNext()
             debouncedRefreshStateStatic()
         }
 
-        fun prev() {
-            mediaController?.transportControls?.skipToPrevious()
+        fun next(context: Context) {
+            val controller = mediaController
+            if (controller == null) {
+                sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_NEXT)
+                return
+            }
+
+            controller.transportControls.skipToNext()
             debouncedRefreshStateStatic()
         }
 
-        fun volumeUp() {
-            mediaController?.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
+        fun prev(context: Context) {
+            val controller = mediaController
+            if (controller == null) {
+                sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_PREVIOUS)
+                return
+            }
+
+            controller.transportControls.skipToPrevious()
+            debouncedRefreshStateStatic()
         }
 
-        fun volumeDown() {
-            mediaController?.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
+        fun volumeUp(context: Context) {
+            adjustMusicVolume(context, AudioManager.ADJUST_RAISE)
+        }
+
+        fun volumeDown(context: Context) {
+            adjustMusicVolume(context, AudioManager.ADJUST_LOWER)
         }
 
         // Static reference for companion object to trigger debounce
         var debouncedRefreshStateStatic: () -> Unit = {}
 
 
-        fun sendMediaButton(context: Context, keyCode: Int) {
-            val intent = android.content.Intent(android.content.Intent.ACTION_MEDIA_BUTTON)
-            val event = android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, keyCode)
-            intent.putExtra(android.content.Intent.EXTRA_KEY_EVENT, event)
-            context.sendOrderedBroadcast(intent, null)
+        private fun adjustMusicVolume(context: Context, direction: Int) {
+            val audioManager = context.applicationContext.getSystemService(AudioManager::class.java)
+            audioManager.adjustStreamVolume(
+                AudioManager.STREAM_MUSIC,
+                direction,
+                AudioManager.FLAG_SHOW_UI
+            )
+        }
 
-            val eventUp = android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, keyCode)
-            val intentUp = android.content.Intent(android.content.Intent.ACTION_MEDIA_BUTTON)
-            intentUp.putExtra(android.content.Intent.EXTRA_KEY_EVENT, eventUp)
-            context.sendOrderedBroadcast(intentUp, null)
+        private fun sendMediaButton(context: Context, keyCode: Int) {
+            sendMediaButtonEvent(context, KeyEvent.ACTION_DOWN, keyCode)
+            sendMediaButtonEvent(context, KeyEvent.ACTION_UP, keyCode)
+        }
+
+        private fun sendMediaButtonEvent(context: Context, action: Int, keyCode: Int) {
+            val intent = android.content.Intent(android.content.Intent.ACTION_MEDIA_BUTTON).apply {
+                putExtra(android.content.Intent.EXTRA_KEY_EVENT, KeyEvent(action, keyCode))
+            }
+            context.sendOrderedBroadcast(intent, null)
         }
     }
 
@@ -125,12 +153,16 @@ class WaterMelonControlListener : NotificationListenerService() {
         val mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
         mediaSessionManager.removeOnActiveSessionsChangedListener(activeSessionsChangedListener)
         mediaController?.unregisterCallback(callback)
+        mediaController = null
+        _mediaState.update { MediaState() }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         serviceScope.cancel()
         mediaController?.unregisterCallback(callback)
+        mediaController = null
+        _mediaState.update { MediaState() }
     }
 
     private fun updateController(controllers: List<MediaController>?) {

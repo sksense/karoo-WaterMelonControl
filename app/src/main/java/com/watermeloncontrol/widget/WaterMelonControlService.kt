@@ -14,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
-class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.8") {
+class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.9") {
 
     override val types: List<DataTypeImpl> = listOf(
         // 1. Playing Now Widget
@@ -36,8 +36,8 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.8") {
 
                             val pi = state.sessionActivity ?: state.packageName?.let { pkg ->
                                 val intent = Intent(context, WidgetActionReceiver::class.java).apply {
-                                    action = "com.watermeloncontrol.widget.ACTION_OPEN_APP"
-                                    putExtra("package_name", pkg)
+                                    action = WidgetActionReceiver.ACTION_OPEN_APP
+                                    putExtra(WidgetActionReceiver.EXTRA_PACKAGE_NAME, pkg)
                                 }
                                 PendingIntent.getBroadcast(
                                     context,
@@ -75,11 +75,11 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.8") {
 
                 views.setOnClickPendingIntent(
                     R.id.btn_vol_up,
-                    createVolPi("com.watermeloncontrol.widget.ACTION_VOL_UP", 3)
+                    createVolPi(WidgetActionReceiver.ACTION_VOL_UP, 3)
                 )
                 views.setOnClickPendingIntent(
                     R.id.btn_vol_down,
-                    createVolPi("com.watermeloncontrol.widget.ACTION_VOL_DOWN", 4)
+                    createVolPi(WidgetActionReceiver.ACTION_VOL_DOWN, 4)
                 )
                 emitter.updateView(views)
             }
@@ -97,9 +97,9 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.2.8") {
                             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                         )
                     }
-                    val piPlayPause = createMediaPi("com.watermeloncontrol.widget.ACTION_PLAY_PAUSE", 0)
-                    val piPrev = createMediaPi("com.watermeloncontrol.widget.ACTION_PREV", 1)
-                    val piNext = createMediaPi("com.watermeloncontrol.widget.ACTION_NEXT", 2)
+                    val piPlayPause = createMediaPi(WidgetActionReceiver.ACTION_PLAY_PAUSE, 0)
+                    val piPrev = createMediaPi(WidgetActionReceiver.ACTION_PREV, 1)
+                    val piNext = createMediaPi(WidgetActionReceiver.ACTION_NEXT, 2)
 
                     WaterMelonControlListener.mediaState
                         .distinctUntilChanged { old, new -> old.isPlaying == new.isPlaying }
