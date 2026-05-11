@@ -1,5 +1,9 @@
 # karoo-WaterMelonControl
 
+[![build](https://img.shields.io/github/actions/workflow/status/sksense/karoo-WaterMelonControl/release.yml?label=build&style=flat-square)](https://github.com/sksense/karoo-WaterMelonControl/actions/workflows/release.yml)
+[![downloads](https://img.shields.io/github/downloads/sksense/karoo-WaterMelonControl/v1.2.9/WaterMelonControl.apk?label=downloads&style=flat-square)](https://github.com/sksense/karoo-WaterMelonControl/releases/latest/download/WaterMelonControl.apk)
+[![license](https://img.shields.io/github/license/sksense/karoo-WaterMelonControl?label=license&style=flat-square)](LICENSE)
+
 A Hammerhead Karoo extension providing optimized media and volume controls, styled to match the native KarooOS interface.
 
 This extension allows the user to add widgets to control the Karoo's device's media control so that you can control the sideloaded music app.
