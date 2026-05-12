@@ -1,6 +1,7 @@
 package com.watermeloncontrol.widget
 
 import android.app.PendingIntent
+import android.app.Notification
 import android.content.ComponentName
 import android.content.Context
 import android.media.AudioManager
@@ -9,6 +10,7 @@ import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.service.notification.NotificationListenerService
+import android.service.notification.StatusBarNotification
 import android.util.Log
 import android.view.KeyEvent
 import kotlinx.coroutines.CoroutineScope
@@ -36,6 +38,7 @@ class WaterMelonControlListener : NotificationListenerService() {
     private var refreshJob: Job? = null
 
     companion object {
+        private const val TAG = "WaterMelonControl"
         private val _mediaState = MutableStateFlow(MediaState())
         val mediaState = _mediaState.asStateFlow()
 
@@ -137,7 +140,14 @@ class WaterMelonControlListener : NotificationListenerService() {
             mediaSessionManager.addOnActiveSessionsChangedListener(activeSessionsChangedListener, componentName)
             updateController(mediaSessionManager.getActiveSessions(componentName))
         } catch (e: SecurityException) {
-            Log.e("WaterMelonControl", "NotificationListener lacks permission to access MediaSessionManager")
+            Log.e(TAG, "NotificationListener lacks permission to access MediaSessionManager")
+        }
+    }
+
+    override fun onNotificationPosted(sbn: StatusBarNotification?) {
+        super.onNotificationPosted(sbn)
+        if (BuildConfig.ENABLE_NOTIFICATION_DIAGNOSTICS && sbn != null) {
+            logNotificationDiagnostics(sbn)
         }
     }
 
@@ -212,5 +222,35 @@ class WaterMelonControlListener : NotificationListenerService() {
                 sessionActivity = controller.sessionActivity
             )
         }
+    }
+
+    private fun logNotificationDiagnostics(sbn: StatusBarNotification) {
+        val notification = sbn.notification ?: return
+        val extras = notification.extras
+        val textLines = extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES)
+            ?.joinToString(separator = " | ") { sanitizeForLog(it) }
+        val hasMediaSession = extras.containsKey(Notification.EXTRA_MEDIA_SESSION)
+        val keys = extras.keySet().sorted().joinToString(separator = ",")
+
+        Log.i(
+            TAG,
+            "NotificationDiagnostics package=${sbn.packageName} " +
+                    "category=${notification.category ?: "<null>"} " +
+                    "title=${sanitizeForLog(extras.getCharSequence(Notification.EXTRA_TITLE))} " +
+                    "text=${sanitizeForLog(extras.getCharSequence(Notification.EXTRA_TEXT))} " +
+                    "subText=${sanitizeForLog(extras.getCharSequence(Notification.EXTRA_SUB_TEXT))} " +
+                    "bigText=${sanitizeForLog(extras.getCharSequence(Notification.EXTRA_BIG_TEXT))} " +
+                    "textLines=${textLines ?: "<null>"} " +
+                    "hasMediaSession=$hasMediaSession " +
+                    "keys=$keys"
+        )
+    }
+
+    private fun sanitizeForLog(value: CharSequence?): String {
+        return value
+            ?.toString()
+            ?.replace('\n', ' ')
+            ?.replace('\r', ' ')
+            ?: "<null>"
     }
 }
