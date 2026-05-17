@@ -36,6 +36,7 @@ class WaterMelonControlListener : NotificationListenerService() {
     private var refreshJob: Job? = null
 
     companion object {
+        private const val TAG = "WaterMelonControl"
         private val _mediaState = MutableStateFlow(MediaState())
         val mediaState = _mediaState.asStateFlow()
 
@@ -137,7 +138,7 @@ class WaterMelonControlListener : NotificationListenerService() {
             mediaSessionManager.addOnActiveSessionsChangedListener(activeSessionsChangedListener, componentName)
             updateController(mediaSessionManager.getActiveSessions(componentName))
         } catch (e: SecurityException) {
-            Log.e("WaterMelonControl", "NotificationListener lacks permission to access MediaSessionManager")
+            Log.e(TAG, "NotificationListener lacks permission to access MediaSessionManager")
         }
     }
 

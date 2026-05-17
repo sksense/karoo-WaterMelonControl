@@ -1,0 +1,14 @@
+{
+    "label": "WaterMelonControl",
+    "packageName": "com.watermeloncontrol.widget",
+    "iconUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.1-beta03-diagnostic/WaterMelonControl-icon.webp",
+    "latestApkUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.1-beta03-diagnostic/WaterMelonControl.apk",
+    "latestVersion": "1.3.1-beta03-diagnostic",
+    "latestVersionCode": 28,
+    "developer": "sksense",
+    "description": "WaterMelonControl adds Karoo data page widgets for sideloaded media apps, including now playing, playback controls, tap-to-open, and device music volume control.",
+    "releaseNotes": "### Karoo 2 Diagnostics\n\n- Adds temporary notification metadata logging for Karoo 2 investigation.\n- Logs package, category, notification title/text extras, text lines, and media session token presence when the notification listener receives updates.\n- This diagnostic logging is intended only for test builds and should be disabled before stable release.",
+    "tags": [
+        "entertainment"
+    ]
+}

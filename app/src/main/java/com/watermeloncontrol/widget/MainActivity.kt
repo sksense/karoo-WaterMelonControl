@@ -121,7 +121,7 @@ fun MainScreen() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (isPermissionGranted) "✓ Notification Access Enabled" else "✗ Notification Access Required",
+                    text = if (isPermissionGranted) "Notification Access Enabled" else "Notification Access Required",
                     color = if (isPermissionGranted) Color(0xFF2E7D32) else Color(0xFFC62828),
                     style = MaterialTheme.typography.bodyLarge
                 )
