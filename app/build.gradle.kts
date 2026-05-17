@@ -16,8 +16,6 @@ val defaultReleaseBaseUrl =
     "https://github.com/sksense/karoo-WaterMelonControl/releases/latest/download"
 val karooManifestUrl =
     providers.gradleProperty("karooManifestUrl").orElse("$defaultReleaseBaseUrl/manifest.json")
-val enableNotificationDiagnostics =
-    providers.gradleProperty("enableNotificationDiagnostics").orElse("false")
 
 android {
     namespace = "com.watermeloncontrol.widget"
@@ -27,14 +25,9 @@ android {
         applicationId = "com.watermeloncontrol.widget"
         minSdk = 26
         targetSdk = 34
-        versionCode = 28
-        versionName = "1.3.1-beta03-diagnostic"
+        versionCode = 29
+        versionName = "1.3.2"
         manifestPlaceholders["karooManifestUrl"] = karooManifestUrl.get()
-        buildConfigField(
-            "boolean",
-            "ENABLE_NOTIFICATION_DIAGNOSTICS",
-            enableNotificationDiagnostics.get()
-        )
     }
 
     signingConfigs {

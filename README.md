@@ -1,6 +1,6 @@
 # karoo-WaterMelonControl
 
-[![downloads](https://img.shields.io/github/downloads/sksense/karoo-WaterMelonControl/v1.3.0/WaterMelonControl.apk?label=downloads&style=flat-square)](https://github.com/sksense/karoo-WaterMelonControl/releases/latest)
+[![downloads](https://img.shields.io/github/downloads/sksense/karoo-WaterMelonControl/v1.3.2/WaterMelonControl.apk?label=downloads&style=flat-square)](https://github.com/sksense/karoo-WaterMelonControl/releases/latest)
 [![license](https://img.shields.io/github/license/sksense/karoo-WaterMelonControl?label=license&style=flat-square)](LICENSE)
 
 A Hammerhead Karoo extension providing optimized media and volume controls, styled to match the native KarooOS interface.
@@ -19,7 +19,7 @@ The primary goal here is to allow the user to listen in beeper and music at the 
 
 ## Installation
 
-1. Download the **[Latest WaterMelonControl APK (v1.3.0)](https://github.com/sksense/karoo-WaterMelonControl/releases/latest/download/WaterMelonControl.apk)**.
+1. Download the **[Latest WaterMelonControl APK (v1.3.2)](https://github.com/sksense/karoo-WaterMelonControl/releases/latest/download/WaterMelonControl.apk)**.
 2. Install the APK onto your Karoo device:
    - **Karoo 3:** Share the APK file to your Karoo device through the **Karoo Companion App**.
    - **Sideloading:** Alternatively, use `adb install <filename>.apk`.
