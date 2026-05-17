@@ -25,8 +25,8 @@ android {
         applicationId = "com.watermeloncontrol.widget"
         minSdk = 26
         targetSdk = 34
-        versionCode = 30
-        versionName = "1.3.3"
+        versionCode = 31
+        versionName = "1.3.4"
         manifestPlaceholders["karooManifestUrl"] = karooManifestUrl.get()
     }
 
@@ -67,7 +67,8 @@ tasks.register("generateManifest") {
     group = "build"
 
     doLast {
-        val baseUrl = System.getenv("BASE_URL") ?: defaultReleaseBaseUrl
+        val baseUrl = System.getenv("BASE_URL")
+            ?: "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v${android.defaultConfig.versionName}"
         val manifestFile = file("$projectDir/manifest.json")
         val manifest = mapOf(
             "label" to "WaterMelonControl",
