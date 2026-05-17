@@ -1,13 +1,13 @@
 {
     "label": "WaterMelonControl",
     "packageName": "com.watermeloncontrol.widget",
-    "iconUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.4/WaterMelonControl-icon.webp",
-    "latestApkUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.4/WaterMelonControl.apk",
-    "latestVersion": "1.3.4",
-    "latestVersionCode": 31,
+    "iconUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.5/WaterMelonControl-icon.webp",
+    "latestApkUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.5/WaterMelonControl.apk",
+    "latestVersion": "1.3.5",
+    "latestVersionCode": 32,
     "developer": "sksense",
     "description": "WaterMelonControl adds Karoo data page widgets for sideloaded media apps, including now playing, playback controls, tap-to-open, and device music volume control.",
-    "releaseNotes": "### Version 1.3.4\n\n- Changes generated Karoo manifest APK/icon URLs to tag-specific release assets.\n- Keeps app manifest lookup pointed at /releases/latest/download/manifest.json for update discovery.\n- This should make Karoo update downloads hit the exact release asset for more reliable GitHub download counts.",
+    "releaseNotes": "### Version 1.3.5\n\n- Fixes PLAYING widget stale metadata after rapid next/previous button presses.\n- Adds a lightweight media-state revision so widget redraws are not skipped during fast metadata churn.\n- Schedules a delayed settle refresh after next/previous commands so final track metadata is read after the player settles.\n- Synchronizes Karoo extension version string to 1.3.5.",
     "tags": [
         "entertainment"
     ]

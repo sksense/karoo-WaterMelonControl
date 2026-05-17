@@ -14,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
-class WaterMelonControlService : KarooExtension("watermelon_control", "1.3.3") {
+class WaterMelonControlService : KarooExtension("watermelon_control", "1.3.5") {
 
     override val types: List<DataTypeImpl> = listOf(
         // 1. Playing Now Widget
@@ -26,7 +26,8 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.3.3") {
                         .distinctUntilChanged { old, new ->
                             old.trackTitle == new.trackTitle &&
                                     old.trackArtist == new.trackArtist &&
-                                    old.packageName == new.packageName
+                                    old.packageName == new.packageName &&
+                                    old.revision == new.revision
                         }
                         .collect { state ->
                             val views = RemoteViews(context.packageName, R.layout.widget_playing_now)

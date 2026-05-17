@@ -25,13 +25,15 @@ data class MediaState(
     val trackTitle: String = "No Media",
     val trackArtist: String = "",
     val isPlaying: Boolean = false,
-    val packageName: String? = null
+    val packageName: String? = null,
+    val revision: Long = 0L
 )
 
 class WaterMelonControlListener : NotificationListenerService() {
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var refreshJob: Job? = null
+    private var settleRefreshJob: Job? = null
 
     companion object {
         private const val TAG = "WaterMelonControl"
@@ -63,7 +65,7 @@ class WaterMelonControlListener : NotificationListenerService() {
             }
 
             controller.transportControls.skipToNext()
-            debouncedRefreshStateStatic()
+            mediaCommandRefreshStatic()
         }
 
         fun prev(context: Context) {
@@ -74,7 +76,7 @@ class WaterMelonControlListener : NotificationListenerService() {
             }
 
             controller.transportControls.skipToPrevious()
-            debouncedRefreshStateStatic()
+            mediaCommandRefreshStatic()
         }
 
         fun volumeUp(context: Context) {
@@ -85,8 +87,9 @@ class WaterMelonControlListener : NotificationListenerService() {
             adjustMusicVolume(context, AudioManager.ADJUST_LOWER)
         }
 
-        // Static reference for companion object to trigger debounce
+        // Static references for companion object to trigger service refreshes
         var debouncedRefreshStateStatic: () -> Unit = {}
+        var mediaCommandRefreshStatic: () -> Unit = {}
 
         private fun adjustMusicVolume(context: Context, direction: Int) {
             val audioManager = context.applicationContext.getSystemService(AudioManager::class.java)
@@ -129,6 +132,7 @@ class WaterMelonControlListener : NotificationListenerService() {
     override fun onListenerConnected() {
         super.onListenerConnected()
         debouncedRefreshStateStatic = { debouncedRefreshState() }
+        mediaCommandRefreshStatic = { refreshAfterMediaCommand() }
         try {
             val mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
             val componentName = ComponentName(this, WaterMelonControlListener::class.java)
@@ -142,6 +146,9 @@ class WaterMelonControlListener : NotificationListenerService() {
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
         debouncedRefreshStateStatic = {}
+        mediaCommandRefreshStatic = {}
+        refreshJob?.cancel()
+        settleRefreshJob?.cancel()
         val mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
         mediaSessionManager.removeOnActiveSessionsChangedListener(activeSessionsChangedListener)
         mediaController?.unregisterCallback(callback)
@@ -155,6 +162,8 @@ class WaterMelonControlListener : NotificationListenerService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        debouncedRefreshStateStatic = {}
+        mediaCommandRefreshStatic = {}
         serviceScope.cancel()
         mediaController?.unregisterCallback(callback)
         mediaController = null
@@ -181,10 +190,25 @@ class WaterMelonControlListener : NotificationListenerService() {
         }
     }
 
+    private fun refreshAfterMediaCommand() {
+        debouncedRefreshState()
+        settleRefreshJob?.cancel()
+        settleRefreshJob = serviceScope.launch {
+            delay(800)
+            refreshState()
+        }
+    }
+
     private fun refreshState() {
         val controller = mediaController
         if (controller == null) {
-            _mediaState.update { MediaState(trackTitle = "No Media", isPlaying = false) }
+            _mediaState.update { current ->
+                MediaState(
+                    trackTitle = "No Media",
+                    isPlaying = false,
+                    revision = current.revision + 1
+                )
+            }
             return
         }
 
@@ -199,14 +223,15 @@ class WaterMelonControlListener : NotificationListenerService() {
         val isActuallyPlaying = state == PlaybackState.STATE_PLAYING
         val isPlayingOrTransitioning = isActuallyPlaying || isTransitioning
 
-        _mediaState.update {
+        _mediaState.update { current ->
             MediaState(
                 trackTitle = if (isPlayingOrTransitioning) (metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
                     ?: "Unknown Track") else "No Media",
                 trackArtist = if (isPlayingOrTransitioning) (metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
                     ?: "") else "",
                 isPlaying = isPlayingOrTransitioning,
-                packageName = controller.packageName
+                packageName = controller.packageName,
+                revision = current.revision + 1
             )
         }
     }
