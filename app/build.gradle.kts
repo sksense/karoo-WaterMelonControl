@@ -25,8 +25,8 @@ android {
         applicationId = "com.watermeloncontrol.widget"
         minSdk = 26
         targetSdk = 34
-        versionCode = 29
-        versionName = "1.3.2"
+        versionCode = 30
+        versionName = "1.3.3"
         manifestPlaceholders["karooManifestUrl"] = karooManifestUrl.get()
     }
 
@@ -59,7 +59,6 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
 }
 

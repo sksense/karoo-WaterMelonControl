@@ -3,11 +3,11 @@
     "packageName": "com.watermeloncontrol.widget",
     "iconUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/latest/download/WaterMelonControl-icon.webp",
     "latestApkUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/latest/download/WaterMelonControl.apk",
-    "latestVersion": "1.3.2",
-    "latestVersionCode": 29,
+    "latestVersion": "1.3.3",
+    "latestVersionCode": 30,
     "developer": "sksense",
     "description": "WaterMelonControl adds Karoo data page widgets for sideloaded media apps, including now playing, playback controls, tap-to-open, and device music volume control.",
-    "releaseNotes": "### Version 1.3.2\n\n- Adds Karoo package detail metadata with developer name, About text, release notes, icon, and fixed APK URL.\n- Enables Karoo update detection through manifest latestVersion/latestVersionCode metadata.\n- Keeps Karoo 2 compatibility fixes from 1.3.1 beta builds.\n- Excludes temporary beta03 notification diagnostic logging.",
+    "releaseNotes": "### Version 1.3.3\n\n- Optimizes widget code by removing unused media session activity state.\n- Deduplicates widget PendingIntent creation for playing, media, and volume controls.\n- Removes unused BuildConfig generation after diagnostic logging removal.\n- Updates README download badge to total release downloads.\n- Keeps fixed release APK asset name: WaterMelonControl.apk.",
     "tags": [
         "entertainment"
     ]

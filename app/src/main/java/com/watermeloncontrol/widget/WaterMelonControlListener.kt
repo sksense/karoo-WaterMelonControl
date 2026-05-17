@@ -1,6 +1,5 @@
 package com.watermeloncontrol.widget
 
-import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.media.AudioManager
@@ -26,8 +25,7 @@ data class MediaState(
     val trackTitle: String = "No Media",
     val trackArtist: String = "",
     val isPlaying: Boolean = false,
-    val packageName: String? = null,
-    val sessionActivity: PendingIntent? = null
+    val packageName: String? = null
 )
 
 class WaterMelonControlListener : NotificationListenerService() {
@@ -89,7 +87,6 @@ class WaterMelonControlListener : NotificationListenerService() {
 
         // Static reference for companion object to trigger debounce
         var debouncedRefreshStateStatic: () -> Unit = {}
-
 
         private fun adjustMusicVolume(context: Context, direction: Int) {
             val audioManager = context.applicationContext.getSystemService(AudioManager::class.java)
@@ -209,8 +206,7 @@ class WaterMelonControlListener : NotificationListenerService() {
                 trackArtist = if (isPlayingOrTransitioning) (metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
                     ?: "") else "",
                 isPlaying = isPlayingOrTransitioning,
-                packageName = controller.packageName,
-                sessionActivity = controller.sessionActivity
+                packageName = controller.packageName
             )
         }
     }

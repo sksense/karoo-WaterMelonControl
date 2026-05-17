@@ -14,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
-class WaterMelonControlService : KarooExtension("watermelon_control", "1.3.2") {
+class WaterMelonControlService : KarooExtension("watermelon_control", "1.3.3") {
 
     override val types: List<DataTypeImpl> = listOf(
         // 1. Playing Now Widget
@@ -26,32 +26,28 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.3.2") {
                         .distinctUntilChanged { old, new ->
                             old.trackTitle == new.trackTitle &&
                                     old.trackArtist == new.trackArtist &&
-                                    old.packageName == new.packageName &&
-                                    old.sessionActivity == new.sessionActivity
+                                    old.packageName == new.packageName
                         }
                         .collect { state ->
                             val views = RemoteViews(context.packageName, R.layout.widget_playing_now)
                             views.setTextViewText(R.id.track_title, state.trackTitle)
                             views.setTextViewText(R.id.track_artist, state.trackArtist)
 
-                            val pi = state.packageName?.let { pkg ->
-                                val intent = Intent(context, WidgetActionReceiver::class.java).apply {
-                                    action = WidgetActionReceiver.ACTION_OPEN_APP
-                                    putExtra(WidgetActionReceiver.EXTRA_PACKAGE_NAME, pkg)
-                                }
-                                PendingIntent.getBroadcast(
-                                    context,
-                                    10,
-                                    intent,
-                                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                            state.packageName?.let { pkg ->
+                                val pendingIntent = actionPendingIntent(
+                                    context = context,
+                                    action = WidgetActionReceiver.ACTION_OPEN_APP,
+                                    requestCode = 10,
+                                    packageName = pkg
+                                )
+                                views.setClickPendingIntentForAll(
+                                    pendingIntent,
+                                    R.id.playing_root,
+                                    R.id.track_title,
+                                    R.id.track_artist
                                 )
                             }
 
-                            if (pi != null) {
-                                views.setOnClickPendingIntent(R.id.playing_root, pi)
-                                views.setOnClickPendingIntent(R.id.track_title, pi)
-                                views.setOnClickPendingIntent(R.id.track_artist, pi)
-                            }
                             emitter.updateView(views)
                         }
                 }
@@ -65,21 +61,13 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.3.2") {
                 emitter.onNext(UpdateGraphicConfig(showHeader = true))
                 val views = RemoteViews(context.packageName, R.layout.widget_volume)
 
-                val createVolPi = { actionStr: String, reqCode: Int ->
-                    PendingIntent.getBroadcast(
-                        context, reqCode,
-                        Intent(context, WidgetActionReceiver::class.java).apply { action = actionStr },
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    )
-                }
-
                 views.setOnClickPendingIntent(
                     R.id.btn_vol_up,
-                    createVolPi(WidgetActionReceiver.ACTION_VOL_UP, 3)
+                    actionPendingIntent(context, WidgetActionReceiver.ACTION_VOL_UP, 3)
                 )
                 views.setOnClickPendingIntent(
                     R.id.btn_vol_down,
-                    createVolPi(WidgetActionReceiver.ACTION_VOL_DOWN, 4)
+                    actionPendingIntent(context, WidgetActionReceiver.ACTION_VOL_DOWN, 4)
                 )
                 emitter.updateView(views)
             }
@@ -89,18 +77,11 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.3.2") {
         object : DataTypeImpl("watermelon_control", "watermelon_media") {
             override fun startView(context: Context, config: ViewConfig, emitter: ViewEmitter) {
                 emitter.onNext(UpdateGraphicConfig(showHeader = true))
-                val job = CoroutineScope(Dispatchers.Main).launch {
-                    val createMediaPi = { actionStr: String, reqCode: Int ->
-                        PendingIntent.getBroadcast(
-                            context, reqCode,
-                            Intent(context, WidgetActionReceiver::class.java).apply { action = actionStr },
-                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                        )
-                    }
-                    val piPlayPause = createMediaPi(WidgetActionReceiver.ACTION_PLAY_PAUSE, 0)
-                    val piPrev = createMediaPi(WidgetActionReceiver.ACTION_PREV, 1)
-                    val piNext = createMediaPi(WidgetActionReceiver.ACTION_NEXT, 2)
+                val piPlayPause = actionPendingIntent(context, WidgetActionReceiver.ACTION_PLAY_PAUSE, 0)
+                val piPrev = actionPendingIntent(context, WidgetActionReceiver.ACTION_PREV, 1)
+                val piNext = actionPendingIntent(context, WidgetActionReceiver.ACTION_NEXT, 2)
 
+                val job = CoroutineScope(Dispatchers.Main).launch {
                     WaterMelonControlListener.mediaState
                         .distinctUntilChanged { old, new -> old.isPlaying == new.isPlaying }
                         .collect { state ->
@@ -120,4 +101,31 @@ class WaterMelonControlService : KarooExtension("watermelon_control", "1.3.2") {
             }
         }
     )
+
+    companion object {
+        private fun actionPendingIntent(
+            context: Context,
+            action: String,
+            requestCode: Int,
+            packageName: String? = null
+        ): PendingIntent {
+            val intent = Intent(context, WidgetActionReceiver::class.java).apply {
+                this.action = action
+                packageName?.let { putExtra(WidgetActionReceiver.EXTRA_PACKAGE_NAME, it) }
+            }
+            return PendingIntent.getBroadcast(
+                context,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+
+        private fun RemoteViews.setClickPendingIntentForAll(
+            pendingIntent: PendingIntent,
+            vararg viewIds: Int
+        ) {
+            viewIds.forEach { setOnClickPendingIntent(it, pendingIntent) }
+        }
+    }
 }
