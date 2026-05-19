@@ -14,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
-class WaterMelonControlService : KarooExtension("watermelon_control", "1.3.5") {
+class WaterMelonControlService : KarooExtension("watermelon_control", "1.3.6-beta01-k2diagnostic") {
 
     override val types: List<DataTypeImpl> = listOf(
         // 1. Playing Now Widget

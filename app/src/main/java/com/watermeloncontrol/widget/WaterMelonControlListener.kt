@@ -1,5 +1,6 @@
 package com.watermeloncontrol.widget
 
+import android.app.Notification
 import android.content.ComponentName
 import android.content.Context
 import android.media.AudioManager
@@ -7,7 +8,9 @@ import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
+import android.os.Build
 import android.service.notification.NotificationListenerService
+import android.service.notification.StatusBarNotification
 import android.util.Log
 import android.view.KeyEvent
 import kotlinx.coroutines.CoroutineScope
@@ -141,6 +144,17 @@ class WaterMelonControlListener : NotificationListenerService() {
         } catch (e: SecurityException) {
             Log.e(TAG, "NotificationListener lacks permission to access MediaSessionManager")
         }
+        logKaroo2Diagnostics("onListenerConnected")
+    }
+
+    override fun onNotificationPosted(sbn: StatusBarNotification?) {
+        super.onNotificationPosted(sbn)
+        logKaroo2Diagnostics("onNotificationPosted", sbn)
+    }
+
+    override fun onNotificationRemoved(sbn: StatusBarNotification?) {
+        super.onNotificationRemoved(sbn)
+        logKaroo2Diagnostics("onNotificationRemoved", sbn)
     }
 
     override fun onListenerDisconnected() {
@@ -155,7 +169,9 @@ class WaterMelonControlListener : NotificationListenerService() {
         mediaController = null
         _mediaState.update { MediaState() }
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+        logKaroo2Diagnostics("onListenerDisconnected")
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             requestRebind(ComponentName(this, WaterMelonControlListener::class.java))
         }
     }
@@ -196,6 +212,7 @@ class WaterMelonControlListener : NotificationListenerService() {
         settleRefreshJob = serviceScope.launch {
             delay(800)
             refreshState()
+            logKaroo2Diagnostics("mediaCommandSettleRefresh")
         }
     }
 
@@ -235,4 +252,74 @@ class WaterMelonControlListener : NotificationListenerService() {
             )
         }
     }
+
+    private fun logKaroo2Diagnostics(event: String, sbn: StatusBarNotification? = null) {
+        if (!BuildConfig.ENABLE_KAROO2_DIAGNOSTICS || Build.VERSION.SDK_INT > Build.VERSION_CODES.O_MR1) return
+
+        Log.i(TAG, "Karoo2Diagnostics event=$event sdk=${Build.VERSION.SDK_INT}")
+        sbn?.let { logNotificationDiagnostics("eventNotification", it) }
+
+        try {
+            val activeNotifications = getActiveNotifications()
+            Log.i(TAG, "Karoo2Diagnostics activeNotifications=${activeNotifications.size}")
+            activeNotifications.forEach { logNotificationDiagnostics("activeNotification", it) }
+        } catch (e: RuntimeException) {
+            Log.w(TAG, "Karoo2Diagnostics getActiveNotifications failed", e)
+        }
+
+        try {
+            val componentName = ComponentName(this, WaterMelonControlListener::class.java)
+            val mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+            val controllers = mediaSessionManager.getActiveSessions(componentName)
+            Log.i(TAG, "Karoo2Diagnostics activeSessions=${controllers.size}")
+            controllers.forEachIndexed { index, controller ->
+                logControllerDiagnostics(index, controller)
+            }
+        } catch (e: RuntimeException) {
+            Log.w(TAG, "Karoo2Diagnostics getActiveSessions failed", e)
+        }
+    }
+
+    private fun logNotificationDiagnostics(source: String, sbn: StatusBarNotification) {
+        val notification = sbn.notification ?: return
+        val extras = notification.extras
+        val textLines = extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES)
+            ?.joinToString(separator = " | ") { sanitizeForLog(it) }
+        val hasMediaSession = extras.containsKey(Notification.EXTRA_MEDIA_SESSION)
+        val keys = extras.keySet().sorted().joinToString(separator = ",")
+
+        Log.i(
+            TAG,
+            "Karoo2Diagnostics $source package=${sbn.packageName} " +
+                    "category=${notification.category ?: "<null>"} " +
+                    "title=${sanitizeForLog(extras.getCharSequence(Notification.EXTRA_TITLE))} " +
+                    "text=${sanitizeForLog(extras.getCharSequence(Notification.EXTRA_TEXT))} " +
+                    "subText=${sanitizeForLog(extras.getCharSequence(Notification.EXTRA_SUB_TEXT))} " +
+                    "bigText=${sanitizeForLog(extras.getCharSequence(Notification.EXTRA_BIG_TEXT))} " +
+                    "textLines=${textLines ?: "<null>"} " +
+                    "hasMediaSession=$hasMediaSession " +
+                    "keys=$keys"
+        )
+    }
+
+    private fun logControllerDiagnostics(index: Int, controller: MediaController) {
+        val metadata = controller.metadata
+        val playbackState = controller.playbackState
+        Log.i(
+            TAG,
+            "Karoo2Diagnostics controller[$index] package=${controller.packageName} " +
+                    "state=${playbackState?.state ?: PlaybackState.STATE_NONE} " +
+                    "title=${sanitizeForLog(metadata?.getString(MediaMetadata.METADATA_KEY_TITLE))} " +
+                    "artist=${sanitizeForLog(metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST))}"
+        )
+    }
+
+    private fun sanitizeForLog(value: CharSequence?): String {
+        return value
+            ?.toString()
+            ?.replace('\n', ' ')
+            ?.replace('\r', ' ')
+            ?: "<null>"
+    }
 }
+
