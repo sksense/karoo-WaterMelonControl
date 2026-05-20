@@ -7,6 +7,7 @@ import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
+import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.util.Log
 import android.view.KeyEvent
@@ -43,6 +44,12 @@ class WaterMelonControlListener : NotificationListenerService() {
         private var mediaController: MediaController? = null
 
         fun playPause(context: Context) {
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O_MR1) {
+                sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
+                debouncedRefreshStateStatic()
+                return
+            }
+
             val controller = mediaController
             if (controller == null) {
                 sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
@@ -58,6 +65,12 @@ class WaterMelonControlListener : NotificationListenerService() {
         }
 
         fun next(context: Context) {
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O_MR1) {
+                sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_NEXT)
+                mediaCommandRefreshStatic()
+                return
+            }
+
             val controller = mediaController
             if (controller == null) {
                 sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_NEXT)
@@ -69,6 +82,12 @@ class WaterMelonControlListener : NotificationListenerService() {
         }
 
         fun prev(context: Context) {
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O_MR1) {
+                sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_PREVIOUS)
+                mediaCommandRefreshStatic()
+                return
+            }
+
             val controller = mediaController
             if (controller == null) {
                 sendMediaButton(context, KeyEvent.KEYCODE_MEDIA_PREVIOUS)
@@ -98,6 +117,23 @@ class WaterMelonControlListener : NotificationListenerService() {
                 direction,
                 AudioManager.FLAG_SHOW_UI
             )
+        }
+
+        fun updateExternalMediaState(
+            title: String? = null,
+            artist: String? = null,
+            isPlaying: Boolean? = null,
+            packageName: String? = null
+        ) {
+            _mediaState.update { current ->
+                MediaState(
+                    trackTitle = title?.takeIf { it.isNotBlank() } ?: current.trackTitle,
+                    trackArtist = artist ?: current.trackArtist,
+                    isPlaying = isPlaying ?: current.isPlaying,
+                    packageName = packageName ?: current.packageName,
+                    revision = current.revision + 1
+                )
+            }
         }
 
         private fun sendMediaButton(context: Context, keyCode: Int) {

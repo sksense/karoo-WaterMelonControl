@@ -80,5 +80,15 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name=".Karoo2MediaBroadcastReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.bluetooth.avrcp-controller.profile.action.TRACK_EVENT" />
+                <action android:name="android.bluetooth.avrcp-controller.profile.action.PLAYBACK_STATUS_CHANGED" />
+                <action android:name="com.android.music.metachanged" />
+                <action android:name="com.android.music.playstatechanged" />
+                <action android:name="com.android.music.playbackcomplete" />
+            </intent-filter>
+        </receiver>
+
     </application>
 </manifest>
