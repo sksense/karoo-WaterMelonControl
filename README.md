@@ -34,7 +34,6 @@ The primary goal here is to allow the user to listen in beeper and music at the 
   - Working: **MEDIA** widget Play/Pause, Previous, and Next after music has started.
   - Working: **VOLUME** widget volume up/down.
   - Limited: **PLAYING** widget title/artist and play/pause status may not update reliably.
-  - Limitation: WaterMelonControl may not start phone music from a stopped state.
 
 ## License
 
