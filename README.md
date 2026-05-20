@@ -29,13 +29,12 @@ The primary goal here is to allow the user to listen in beeper and music at the 
 
 ## Compatibility
 
-- **The New Karoo (Karoo 3):** Fully supported and tested with the optimized MediaSession path.
-- **Karoo 2:** Supported with Android 8-specific fallbacks for the core control widgets:
-  - Working: **MEDIA** widget Play/Pause, Previous, and Next after a media app/session has started.
+- **The New Karoo (Karoo 3):** Fully supported and tested.
+- **Karoo 2:** Core controls are supported:
+  - Working: **MEDIA** widget Play/Pause, Previous, and Next after music has started.
   - Working: **VOLUME** widget volume up/down.
-  - Partially supported: Bluetooth/legacy media metadata is used when Karoo 2 exposes it.
-  - Not working reliably: **PLAYING** widget title/artist and play/pause icon state when Karoo 2 does not expose notification or MediaSession metadata.
-  - Limitation: WaterMelonControl cannot choose or start a phone/iOS music source from a stopped state unless Karoo 2 exposes an active Android media session.
+  - Limited: **PLAYING** widget title/artist and play/pause status may not update reliably.
+  - Limitation: WaterMelonControl may not start phone music from a stopped state.
 
 ## License
 
