@@ -1,13 +1,13 @@
 {
     "label": "WaterMelonControl",
     "packageName": "com.watermeloncontrol.widget",
-    "iconUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.6-beta02/WaterMelonControl-icon.webp",
-    "latestApkUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.6-beta02/WaterMelonControl.apk",
-    "latestVersion": "1.3.6-beta02",
-    "latestVersionCode": 34,
+    "iconUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.6/WaterMelonControl-icon.webp",
+    "latestApkUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.6/WaterMelonControl.apk",
+    "latestVersion": "1.3.6",
+    "latestVersionCode": 35,
     "developer": "sksense",
     "description": "WaterMelonControl adds Karoo data page widgets for sideloaded media apps, including now playing, playback controls, tap-to-open, and device music volume control.",
-    "releaseNotes": "### Karoo 2 beta02\n\n- Removes beta01 diagnostic logging.\n- Adds Android 8/Oreo-only media fallbacks for Karoo 2.\n- Adds passive Bluetooth AVRCP metadata receiver for phone-to-Karoo playback metadata.\n- Adds legacy Android media broadcast receiver for older sideloaded players.\n- Prefers media-key dispatch for play/pause/next/previous on Android 8 to preserve confirmed Karoo 2 control behavior.\n- Karoo 3 path remains unchanged; fallbacks return immediately on newer Android versions.",
+    "releaseNotes": "### Stable 1.3.6\n\n- Promotes Karoo 2 / K2 Android 8 media-control fallbacks from beta02.\n- Adds Android 8-only media-key dispatch path for play/pause/next/previous.\n- Keeps passive Bluetooth AVRCP and legacy media broadcast fallbacks for K2 metadata where the device exposes them.\n- Keeps Karoo 3 on the optimized MediaSession path with no polling and no diagnostic logging.\n- Known K2 limitation: the PLAYING widget may not show title/artist when Karoo 2 does not expose notification or media-session metadata.",
     "tags": [
         "entertainment"
     ]

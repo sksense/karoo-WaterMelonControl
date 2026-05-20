@@ -19,7 +19,7 @@ The primary goal here is to allow the user to listen in beeper and music at the 
 
 ## Installation
 
-1. Download the **[Latest WaterMelonControl APK (v1.3.5)](https://github.com/sksense/karoo-WaterMelonControl/releases/latest/download/WaterMelonControl.apk)**.
+1. Download the **[Latest WaterMelonControl APK (v1.3.6)](https://github.com/sksense/karoo-WaterMelonControl/releases/latest/download/WaterMelonControl.apk)**.
 2. Install the APK onto your Karoo device:
    - **Karoo 3:** Share the APK file to your Karoo device through the **Karoo Companion App**.
    - **Sideloading:** Alternatively, use `adb install <filename>.apk`.
@@ -29,8 +29,13 @@ The primary goal here is to allow the user to listen in beeper and music at the 
 
 ## Compatibility
 
-- **The New Karoo (Karoo 3):** Fully supported and tested.
-- **Karoo 2:** Currently **untested**. Compatibility is not guaranteed.
+- **The New Karoo (Karoo 3):** Fully supported and tested with the optimized MediaSession path.
+- **Karoo 2:** Supported with Android 8-specific fallbacks for the core control widgets:
+  - Working: **MEDIA** widget Play/Pause, Previous, and Next after a media app/session has started.
+  - Working: **VOLUME** widget volume up/down.
+  - Partially supported: Bluetooth/legacy media metadata is used when Karoo 2 exposes it.
+  - Not working reliably: **PLAYING** widget title/artist and play/pause icon state when Karoo 2 does not expose notification or MediaSession metadata.
+  - Limitation: WaterMelonControl cannot choose or start a phone/iOS music source from a stopped state unless Karoo 2 exposes an active Android media session.
 
 ## License
 
