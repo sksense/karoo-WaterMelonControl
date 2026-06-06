@@ -7,7 +7,7 @@ out="$root/badges/downloads.json"
 
 total="$({
   gh api "repos/$repo/releases" --paginate \
-    --jq '.[] | .assets[] | select(.name | test("\\.apk$"; "i")) | .download_count'
+    --jq '.[] | .assets[] | .download_count'
 } | awk '{sum += $1} END {print sum + 0}')"
 
 mkdir -p "$(dirname "$out")"
@@ -20,4 +20,4 @@ cat > "$out" <<JSON
 }
 JSON
 
-echo "Updated $out with total APK downloads: $total"
+echo "Updated $out with total release asset downloads: $total"
