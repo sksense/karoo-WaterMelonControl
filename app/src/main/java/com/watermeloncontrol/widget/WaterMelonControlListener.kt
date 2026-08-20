@@ -35,6 +35,7 @@ class WaterMelonControlListener : NotificationListenerService() {
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var refreshJob: Job? = null
     private var settleRefreshJob: Job? = null
+    private var activeSessionsListenerRegistered = false
 
     companion object {
         private const val TAG = "WaterMelonControl"
@@ -131,7 +132,7 @@ class WaterMelonControlListener : NotificationListenerService() {
                     trackArtist = artist ?: current.trackArtist,
                     isPlaying = isPlaying ?: current.isPlaying,
                     packageName = packageName ?: current.packageName,
-                    revision = current.revision + 1
+                    revision = current.revision
                 )
             }
         }
@@ -151,10 +152,8 @@ class WaterMelonControlListener : NotificationListenerService() {
         override fun onPlaybackStateChanged(state: PlaybackState?) {
             val s = state?.state ?: PlaybackState.STATE_NONE
             if (s == PlaybackState.STATE_STOPPED || s == PlaybackState.STATE_PAUSED || s == PlaybackState.STATE_NONE) {
-                // Current session stopped/paused, check if another app is playing
-                val mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
-                val componentName = ComponentName(this@WaterMelonControlListener, WaterMelonControlListener::class.java)
-                updateController(mediaSessionManager.getActiveSessions(componentName))
+                // Current session stopped/paused, check if another app is playing.
+                updateController(queryActiveSessions())
             } else {
                 debouncedRefreshState()
             }
@@ -172,38 +171,59 @@ class WaterMelonControlListener : NotificationListenerService() {
         try {
             val mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
             val componentName = ComponentName(this, WaterMelonControlListener::class.java)
-            mediaSessionManager.addOnActiveSessionsChangedListener(activeSessionsChangedListener, componentName)
-            updateController(mediaSessionManager.getActiveSessions(componentName))
+            if (!activeSessionsListenerRegistered) {
+                mediaSessionManager.addOnActiveSessionsChangedListener(activeSessionsChangedListener, componentName)
+                activeSessionsListenerRegistered = true
+            }
+            updateController(queryActiveSessions())
         } catch (e: SecurityException) {
-            Log.e(TAG, "NotificationListener lacks permission to access MediaSessionManager")
+            Log.e(TAG, "NotificationListener lacks permission to register for media sessions", e)
+        }
+    }
+
+    private fun queryActiveSessions(): List<MediaController>? {
+        return try {
+            val mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+            val componentName = ComponentName(this, WaterMelonControlListener::class.java)
+            mediaSessionManager.getActiveSessions(componentName)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Notification access was revoked while querying media sessions", e)
+            null
         }
     }
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
-        debouncedRefreshStateStatic = {}
-        mediaCommandRefreshStatic = {}
-        refreshJob?.cancel()
-        settleRefreshJob?.cancel()
-        val mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
-        mediaSessionManager.removeOnActiveSessionsChangedListener(activeSessionsChangedListener)
-        mediaController?.unregisterCallback(callback)
-        mediaController = null
-        _mediaState.update { MediaState() }
+        cleanupMediaSession()
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             requestRebind(ComponentName(this, WaterMelonControlListener::class.java))
         }
     }
 
     override fun onDestroy() {
+        cleanupMediaSession()
+        serviceScope.cancel()
         super.onDestroy()
+    }
+
+    private fun cleanupMediaSession() {
         debouncedRefreshStateStatic = {}
         mediaCommandRefreshStatic = {}
-        serviceScope.cancel()
+        refreshJob?.cancel()
+        refreshJob = null
+        settleRefreshJob?.cancel()
+        settleRefreshJob = null
+
+        if (activeSessionsListenerRegistered) {
+            val mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+            mediaSessionManager.removeOnActiveSessionsChangedListener(activeSessionsChangedListener)
+            activeSessionsListenerRegistered = false
+        }
+
         mediaController?.unregisterCallback(callback)
         mediaController = null
-        _mediaState.update { MediaState() }
+        _mediaState.value = MediaState()
     }
 
     private fun updateController(controllers: List<MediaController>?) {
@@ -231,18 +251,18 @@ class WaterMelonControlListener : NotificationListenerService() {
         settleRefreshJob?.cancel()
         settleRefreshJob = serviceScope.launch {
             delay(800)
-            refreshState()
+            refreshState(forceRedraw = true)
         }
     }
 
-    private fun refreshState() {
+    private fun refreshState(forceRedraw: Boolean = false) {
         val controller = mediaController
         if (controller == null) {
             _mediaState.update { current ->
                 MediaState(
                     trackTitle = "No Media",
                     isPlaying = false,
-                    revision = current.revision + 1
+                    revision = current.revision + if (forceRedraw) 1 else 0
                 )
             }
             return
@@ -267,7 +287,7 @@ class WaterMelonControlListener : NotificationListenerService() {
                     ?: "") else "",
                 isPlaying = isPlayingOrTransitioning,
                 packageName = controller.packageName,
-                revision = current.revision + 1
+                revision = current.revision + if (forceRedraw) 1 else 0
             )
         }
     }

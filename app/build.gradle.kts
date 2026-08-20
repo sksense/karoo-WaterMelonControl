@@ -12,6 +12,12 @@ val releaseSigningProperties = Properties().apply {
         releaseSigningPropertiesFile.inputStream().use(::load)
     }
 }
+val releaseSigningPropertyNames = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+val hasReleaseSigningConfig = releaseSigningPropertiesFile.exists() &&
+    releaseSigningPropertyNames.all { !releaseSigningProperties.getProperty(it).isNullOrBlank() } &&
+    rootProject.file(releaseSigningProperties.getProperty("storeFile", "missing")).exists()
+val expectedReleaseCertificateSha256 =
+    "66fab07e67d1965f5131469715c4f1b067fc3ee281197ed0e0ac170d68536c30"
 val defaultReleaseBaseUrl =
     "https://github.com/sksense/karoo-WaterMelonControl/releases/latest/download"
 val karooManifestUrl =
@@ -25,18 +31,18 @@ android {
         applicationId = "com.watermeloncontrol.widget"
         minSdk = 26
         targetSdk = 34
-        versionCode = 35
-        versionName = "1.3.6"
+        versionCode = 36
+        versionName = "1.3.7"
         manifestPlaceholders["karooManifestUrl"] = karooManifestUrl.get()
     }
 
     signingConfigs {
-        if (releaseSigningPropertiesFile.exists()) {
+        if (hasReleaseSigningConfig) {
             create("release") {
-                storeFile = rootProject.file(releaseSigningProperties["storeFile"] as String)
-                storePassword = releaseSigningProperties["storePassword"] as String
-                keyAlias = releaseSigningProperties["keyAlias"] as String
-                keyPassword = releaseSigningProperties["keyPassword"] as String
+                storeFile = rootProject.file(releaseSigningProperties.getProperty("storeFile"))
+                storePassword = releaseSigningProperties.getProperty("storePassword")
+                keyAlias = releaseSigningProperties.getProperty("keyAlias")
+                keyPassword = releaseSigningProperties.getProperty("keyPassword")
             }
         }
     }
@@ -44,7 +50,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            if (releaseSigningPropertiesFile.exists()) {
+            if (hasReleaseSigningConfig) {
                 signingConfig = signingConfigs.getByName("release")
             }
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -60,6 +66,58 @@ android {
     buildFeatures {
         compose = true
     }
+}
+
+val validateProductionSigning = tasks.register("validateProductionSigning") {
+    description = "Fails production release builds when signing configuration is missing"
+    group = "verification"
+
+    doLast {
+        check(hasReleaseSigningConfig) {
+            "Production signing configuration is missing or incomplete. Expected keystore/watermeloncontrol-release.properties and its configured keystore."
+        }
+    }
+}
+
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    dependsOn(validateProductionSigning)
+}
+
+val verifyProductionCertificate = tasks.register("verifyProductionCertificate") {
+    description = "Verifies the release APK uses the expected production certificate"
+    group = "verification"
+    dependsOn("assembleRelease")
+
+    doLast {
+        val apk = layout.buildDirectory.file("outputs/apk/release/app-release.apk").get().asFile
+        check(apk.exists()) { "Release APK not found: $apk" }
+
+        val buildToolsDir = android.sdkDirectory.resolve("build-tools")
+            .listFiles()
+            ?.filter { it.isDirectory }
+            ?.maxByOrNull { it.name.substringBefore('.').toIntOrNull() ?: 0 }
+            ?: error("Android build-tools not found")
+        val apksigner = buildToolsDir.resolve("apksigner")
+        check(apksigner.canExecute()) { "apksigner not found: $apksigner" }
+
+        val output = ProcessBuilder(apksigner.absolutePath, "verify", "--print-certs", apk.absolutePath)
+            .redirectErrorStream(true)
+            .start()
+            .run {
+                val text = inputStream.bufferedReader().readText()
+                check(waitFor() == 0) { "apksigner verification failed:\n$text" }
+                text
+            }
+        check(output.lowercase().contains(expectedReleaseCertificateSha256)) {
+            "Release certificate mismatch. Expected SHA-256 $expectedReleaseCertificateSha256"
+        }
+    }
+}
+
+tasks.register("verifyProductionRelease") {
+    description = "Builds and verifies the production-signed release APK"
+    group = "verification"
+    dependsOn(verifyProductionCertificate)
 }
 
 tasks.register("generateManifest") {

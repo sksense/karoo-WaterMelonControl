@@ -74,7 +74,7 @@ fun MainScreen() {
             onDismissRequest = { showAdbDialog = false },
             title = { Text("Settings Not Found") },
             text = {
-                Text("Your device does not support the standard notification settings UI. Please connect your device to a computer and run the following ADB command to enable access:\n\nadb shell settings put secure enabled_notification_listeners %nlisteners:com.watermeloncontrol.widget/com.watermeloncontrol.widget.WaterMelonControlListener")
+                Text("Your device does not support the standard notification settings UI. Connect it to a computer and run this ADB command to enable access without replacing other notification listeners:\n\nadb shell cmd notification allow_listener com.watermeloncontrol.widget/com.watermeloncontrol.widget.WaterMelonControlListener")
             },
             confirmButton = {
                 TextButton(onClick = { showAdbDialog = false }) {
