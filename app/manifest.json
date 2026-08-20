@@ -7,7 +7,7 @@
     "latestVersionCode": 37,
     "developer": "sksense",
     "description": "WaterMelonControl adds Karoo data page widgets for sideloaded media apps, including now playing, playback controls, tap-to-open, and device music volume control.",
-    "releaseNotes": "### 1.4.0 Development\n\n- Extracts pure media-session selection and media-state reduction.\n- Adds unit tests for core media decisions and redraw behavior.",
+    "releaseNotes": "### 1.4.0 Media Core Refactor\n\n- Extracts media-session selection into a small, testable component.\n- Extracts media-state mapping into a pure reducer.\n- Adds 11 JVM unit tests covering session priority, playback transitions, metadata defaults, external updates, and forced redraw behavior.\n- Preserves existing widget behavior and event-driven performance.",
     "tags": [
         "entertainment"
     ]
