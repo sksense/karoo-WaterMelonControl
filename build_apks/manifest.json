@@ -1,13 +1,13 @@
 {
     "label": "WaterMelonControl",
     "packageName": "com.watermeloncontrol.widget",
-    "iconUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.6/WaterMelonControl-icon.webp",
-    "latestApkUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.6/WaterMelonControl.apk",
-    "latestVersion": "1.3.6",
-    "latestVersionCode": 35,
+    "iconUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.7/WaterMelonControl-icon.webp",
+    "latestApkUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.3.7/WaterMelonControl.apk",
+    "latestVersion": "1.3.7",
+    "latestVersionCode": 36,
     "developer": "sksense",
     "description": "WaterMelonControl adds Karoo data page widgets for sideloaded media apps, including now playing, playback controls, tap-to-open, and device music volume control.",
-    "releaseNotes": "### Stable 1.3.6\n\n- Promotes Karoo 2 / K2 Android 8 media-control fallbacks from beta02.\n- Adds Android 8-only media-key dispatch path for play/pause/next/previous.\n- Keeps passive Bluetooth AVRCP and legacy media broadcast fallbacks for K2 metadata where the device exposes them.\n- Keeps Karoo 3 on the optimized MediaSession path with no polling and no diagnostic logging.\n- Known K2 limitation: the PLAYING widget may not show title/artist when Karoo 2 does not expose notification or media-session metadata.",
+    "releaseNotes": "### 1.3.7 Stability\n\n- Improves media-session listener cleanup and handles notification-access revocation safely.\n- Reduces unnecessary PLAYING widget redraws while preserving skip-settle updates.\n- Fixes Karoo 2 notification-access guidance.\n- Adds production signing and certificate verification safeguards.\n- Removes obsolete GitHub Actions release automation; releases remain built and signed locally.",
     "tags": [
         "entertainment"
     ]

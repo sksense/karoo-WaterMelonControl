@@ -7,7 +7,7 @@
     "latestVersionCode": 36,
     "developer": "sksense",
     "description": "WaterMelonControl adds Karoo data page widgets for sideloaded media apps, including now playing, playback controls, tap-to-open, and device music volume control.",
-    "releaseNotes": "### 1.3.7 Stability\n\n- Improves listener lifecycle cleanup and permission-revocation safety.\n- Reduces unnecessary PLAYING widget redraws.\n- Fixes Karoo 2 notification-access guidance.\n- Adds production signing and certificate verification safeguards.\n- Keeps releases local/manual; GitHub Actions release workflow removed.",
+    "releaseNotes": "### 1.3.7 Stability\n\n- Improves media-session listener cleanup and handles notification-access revocation safely.\n- Reduces unnecessary PLAYING widget redraws while preserving skip-settle updates.\n- Fixes Karoo 2 notification-access guidance.\n- Adds production signing and certificate verification safeguards.\n- Removes obsolete GitHub Actions release automation; releases remain built and signed locally.",
     "tags": [
         "entertainment"
     ]
