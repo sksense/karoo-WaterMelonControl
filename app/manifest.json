@@ -7,7 +7,7 @@
     "latestVersionCode": 38,
     "developer": "sksense",
     "description": "WaterMelonControl adds Karoo data page widgets for sideloaded media apps, including now playing, playback controls, tap-to-open, and device music volume control.",
-    "releaseNotes": "### 1.4.1 Maintenance\n\n- Centralizes extension version metadata through generated BuildConfig.\n- Replaces deprecated parcelable access while preserving Android 8 compatibility.\n- Adds public building, releasing, and privacy documentation.\n- Expands JVM unit coverage.",
+    "releaseNotes": "### 1.4.1 Maintenance\n\n- Centralizes extension version metadata through generated BuildConfig.\n- Replaces deprecated parcelable access while preserving Android 8 compatibility.\n- Adds public building, releasing, and privacy documentation.\n- Expands JVM unit coverage from 11 to 14 tests.\n- Preserves existing widget behavior.",
     "tags": [
         "entertainment"
     ]
