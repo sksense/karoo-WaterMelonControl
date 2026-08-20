@@ -1,6 +1,6 @@
 # karoo-WaterMelonControl
 
-[![GitHub Downloads](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/sksense/karoo-WaterMelonControl/main/badges/downloads.json)](https://github.com/sksense/karoo-WaterMelonControl/releases)
+[![GitHub Downloads](https://img.shields.io/github/downloads/sksense/karoo-WaterMelonControl/total)](https://github.com/sksense/karoo-WaterMelonControl/releases)
 [![GitHub License](https://img.shields.io/github/license/sksense/karoo-WaterMelonControl)](https://github.com/sksense/karoo-WaterMelonControl/blob/main/LICENSE)
 
 A Hammerhead Karoo extension providing optimized media and volume controls, styled to match the native KarooOS interface.
