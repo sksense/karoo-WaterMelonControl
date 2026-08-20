@@ -22,14 +22,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class MediaState(
-    val trackTitle: String = "No Media",
-    val trackArtist: String = "",
-    val isPlaying: Boolean = false,
-    val packageName: String? = null,
-    val revision: Long = 0L
-)
-
 class WaterMelonControlListener : NotificationListenerService() {
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -127,12 +119,12 @@ class WaterMelonControlListener : NotificationListenerService() {
             packageName: String? = null
         ) {
             _mediaState.update { current ->
-                MediaState(
-                    trackTitle = title?.takeIf { it.isNotBlank() } ?: current.trackTitle,
-                    trackArtist = artist ?: current.trackArtist,
-                    isPlaying = isPlaying ?: current.isPlaying,
-                    packageName = packageName ?: current.packageName,
-                    revision = current.revision
+                MediaStateReducer.fromExternalUpdate(
+                    current = current,
+                    title = title,
+                    artist = artist,
+                    isPlaying = isPlaying,
+                    packageName = packageName
                 )
             }
         }
@@ -227,8 +219,9 @@ class WaterMelonControlListener : NotificationListenerService() {
     }
 
     private fun updateController(controllers: List<MediaController>?) {
-        val newController = controllers?.find { it.playbackState?.state == PlaybackState.STATE_PLAYING }
-            ?: controllers?.firstOrNull()
+        val newController = MediaSessionSelector.select(controllers) {
+            it.playbackState?.state == PlaybackState.STATE_PLAYING
+        }
 
         if (newController?.sessionToken != mediaController?.sessionToken) {
             mediaController?.unregisterCallback(callback)
@@ -259,11 +252,7 @@ class WaterMelonControlListener : NotificationListenerService() {
         val controller = mediaController
         if (controller == null) {
             _mediaState.update { current ->
-                MediaState(
-                    trackTitle = "No Media",
-                    isPlaying = false,
-                    revision = current.revision + if (forceRedraw) 1 else 0
-                )
+                MediaStateReducer.fromSession(current, snapshot = null, forceRedraw = forceRedraw)
             }
             return
         }
@@ -279,16 +268,14 @@ class WaterMelonControlListener : NotificationListenerService() {
         val isActuallyPlaying = state == PlaybackState.STATE_PLAYING
         val isPlayingOrTransitioning = isActuallyPlaying || isTransitioning
 
+        val snapshot = SessionMediaSnapshot(
+            title = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE),
+            artist = metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST),
+            isPlayingOrTransitioning = isPlayingOrTransitioning,
+            packageName = controller.packageName
+        )
         _mediaState.update { current ->
-            MediaState(
-                trackTitle = if (isPlayingOrTransitioning) (metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
-                    ?: "Unknown Track") else "No Media",
-                trackArtist = if (isPlayingOrTransitioning) (metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
-                    ?: "") else "",
-                isPlaying = isPlayingOrTransitioning,
-                packageName = controller.packageName,
-                revision = current.revision + if (forceRedraw) 1 else 0
-            )
+            MediaStateReducer.fromSession(current, snapshot, forceRedraw)
         }
     }
 }
