@@ -97,6 +97,26 @@ class MediaStateReducerTest {
     }
 
     @Test
+    fun `forced redraw without a session clears stale state and increments revision`() {
+        val result = MediaStateReducer.fromSession(
+            MediaState("Old", "Artist", true, "player.package", revision = 9),
+            snapshot = null,
+            forceRedraw = true
+        )
+
+        assertEquals(MediaState(revision = 10), result)
+    }
+
+    @Test
+    fun `empty external update is equality stable`() {
+        val current = MediaState("Track", "Artist", true, "player.package", revision = 4)
+
+        val result = MediaStateReducer.fromExternalUpdate(current)
+
+        assertEquals(current, result)
+    }
+
+    @Test
     fun `external update merges only supplied values`() {
         val current = MediaState("Track", "Artist", true, "player.package", revision = 7)
         val result = MediaStateReducer.fromExternalUpdate(

@@ -35,6 +35,14 @@ The primary goal here is to allow the user to listen in beeper and music at the 
   - Working: **VOLUME** widget volume up/down.
   - Limited: **PLAYING** widget title/artist and play/pause status may not update reliably.
 
+## Privacy
+
+Media and notification data is processed locally and is not stored or uploaded. See [PRIVACY.md](PRIVACY.md).
+
+## Development
+
+See [BUILDING.md](BUILDING.md) and [RELEASING.md](RELEASING.md).
+
 ## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.

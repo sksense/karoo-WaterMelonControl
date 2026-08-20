@@ -1,13 +1,13 @@
 {
     "label": "WaterMelonControl",
     "packageName": "com.watermeloncontrol.widget",
-    "iconUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.4.0/WaterMelonControl-icon.webp",
-    "latestApkUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.4.0/WaterMelonControl.apk",
-    "latestVersion": "1.4.0",
-    "latestVersionCode": 37,
+    "iconUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.4.1/WaterMelonControl-icon.webp",
+    "latestApkUrl": "https://github.com/sksense/karoo-WaterMelonControl/releases/download/v1.4.1/WaterMelonControl.apk",
+    "latestVersion": "1.4.1",
+    "latestVersionCode": 38,
     "developer": "sksense",
     "description": "WaterMelonControl adds Karoo data page widgets for sideloaded media apps, including now playing, playback controls, tap-to-open, and device music volume control.",
-    "releaseNotes": "### 1.4.0 Media Core Refactor\n\n- Extracts media-session selection into a small, testable component.\n- Extracts media-state mapping into a pure reducer.\n- Adds 11 JVM unit tests covering session priority, playback transitions, metadata defaults, external updates, and forced redraw behavior.\n- Preserves existing widget behavior and event-driven performance.",
+    "releaseNotes": "### 1.4.1 Maintenance\n\n- Centralizes extension version metadata through generated BuildConfig.\n- Replaces deprecated parcelable access while preserving Android 8 compatibility.\n- Adds public building, releasing, and privacy documentation.\n- Expands JVM unit coverage.",
     "tags": [
         "entertainment"
     ]

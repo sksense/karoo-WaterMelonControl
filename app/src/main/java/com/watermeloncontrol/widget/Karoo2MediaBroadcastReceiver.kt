@@ -6,6 +6,7 @@ import android.content.Intent
 import android.media.MediaMetadata
 import android.media.session.PlaybackState
 import android.os.Build
+import androidx.core.content.IntentCompat
 
 class Karoo2MediaBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -22,8 +23,8 @@ class Karoo2MediaBroadcastReceiver : BroadcastReceiver() {
     }
 
     private fun handleAvrcpEvent(intent: Intent) {
-        val metadata = intent.getParcelableExtra<MediaMetadata>(EXTRA_AVRCP_METADATA)
-        val playbackState = intent.getParcelableExtra<PlaybackState>(EXTRA_AVRCP_PLAYBACK)
+        val metadata = IntentCompat.getParcelableExtra(intent, EXTRA_AVRCP_METADATA, MediaMetadata::class.java)
+        val playbackState = IntentCompat.getParcelableExtra(intent, EXTRA_AVRCP_PLAYBACK, PlaybackState::class.java)
         val state = playbackState?.state
 
         WaterMelonControlListener.updateExternalMediaState(

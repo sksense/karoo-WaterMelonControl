@@ -20,6 +20,18 @@ class MediaSessionSelectorTest {
     }
 
     @Test
+    fun `first playing session wins when several report playing`() {
+        val sessions = listOf(
+            Session("first-playing", playing = true),
+            Session("second-playing", playing = true)
+        )
+
+        val selected = MediaSessionSelector.select(sessions) { it.playing }
+
+        assertEquals("first-playing", selected?.id)
+    }
+
+    @Test
     fun `first session is stable fallback when none are playing`() {
         val sessions = listOf(
             Session("first", playing = false),
